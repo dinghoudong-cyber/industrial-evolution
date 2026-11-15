@@ -1,0 +1,20 @@
+{
+  "sampler_path": "trio://run_3dd5m96r52hn/sampler_weights/sampler-r2",
+  "train_state_path": "trio://run_3dd5m96r52hn/weights/round2",
+  "resume_from": "trio://run_2cxtppkfoe0l/weights/round1",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "size": 1155193338,
+  "steps": 100,
+  "rank": 32,
+  "learning_rate": 0.0001,
+  "samples": 1381,
+  "seed": 20261115,
+  "offset": 200,
+  "loss_first": 1.246635,
+  "loss_last": 5.947752,
+  "loss_mean": 3.663127,
+  "data": "pytrio-train\\sft_data.jsonl",
+  "swanlab_url": "https://swanlab.cn/@1649435028/industrial_evolution/runs/u7gc6azd",
+  "elapsed_seconds": 584.95,
+  "created_at": "20261115-144513"
+}

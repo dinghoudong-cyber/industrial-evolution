@@ -1,0 +1,13 @@
+{
+  "sampler_path": "trio://run_5g1lugalozsl/sampler_weights/sampler",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "size": 1155193336,
+  "steps": 1,
+  "rank": 32,
+  "learning_rate": 0.0001,
+  "samples": 2,
+  "data": "builtin",
+  "swanlab_url": null,
+  "elapsed_seconds": 17.95,
+  "created_at": "20261115-141942"
+}
