@@ -18,7 +18,7 @@ B、C 记录与项目主页同样返回应用壳，无匿名可读内容。因�
 2. 三条 A/B/C 记录当前只是**静态 baseline**，不是迭代过程。在联网开发机把**闭环迭代 run** 同步上云：
    ```powershell
    # 先确认本地完整记录存在（离线复核包即其副本）
-   ./\.venv/Scripts/python.exe "submission\校赛初版\实验记录\离线复核包\复算.py"
+   ./\.venv/Scripts/python.exe "submission\提交版\实验记录\离线复核包\复算.py"
 
    # 用 online 模式跑一次完整闭环，或用 swanlab sync 补传已有 offline 产物
    $env:SWANLAB_API_KEY = "<通过平台安全渠道取得，不要写进任何文件>"

@@ -17,7 +17,7 @@ import pathlib
 import tarfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SRC_TAR = ROOT / "submission/校赛初版/镜像/industrial-evolution-school-2026-11-12.tar"
+SRC_TAR = ROOT / "submission/提交版/镜像/industrial-evolution-school-2026-11-12.tar"
 OUT_TAR = ROOT / "dist/industrial-evolution-school-2026-11-14.tar"
 NEW_TAG = "school-2026-11-14"
 MTIME = int(datetime.datetime(2026, 11, 14, 12, 0, 0, tzinfo=datetime.timezone.utc).timestamp())

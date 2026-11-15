@@ -1,7 +1,7 @@
 """组装「只含上交材料」的干净副本，并重新打包不含内部文档的源码归档。
 
-副本位置：D:\\桌面\\智训引擎-校赛提交
-原 submission/校赛初版/ 保留为内部工作目录，不做任何修改。
+副本位置：D:\\桌面\\智训引擎-提交
+原 submission/提交版/ 保留为内部工作目录，不做任何修改。
 """
 
 from __future__ import annotations
@@ -13,8 +13,8 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(r"D:\industrial_evolution")
-SRC = ROOT / "submission/校赛初版"
-OUT = Path(r"D:\桌面\智训引擎-校赛提交")
+SRC = ROOT / "submission/提交版"
+OUT = Path(r"D:\桌面\智训引擎-提交")
 NEW_IMAGE = ROOT / "dist/industrial-evolution-school-2026-11-15.tar"
 
 # 源码归档：只允许这些 docs 进入（其余为内部自评/整改/企业赛规划/开发笔记）
@@ -185,7 +185,7 @@ CLEAN_RULES: dict[str, list[tuple[str, str]]] = {
     ],
     "实验记录/离线复核包/复算.py": [
         ("用法（在项目根目录）", "用法（在提交目录根目录）"),
-        (r'.venv\\Scripts\\python.exe "submission\\校赛初版\\实验记录\\离线复核包\\复算.py"',
+        (r'.venv\\Scripts\\python.exe "submission\\提交版\\实验记录\\离线复核包\\复算.py"',
          'python "实验记录/离线复核包/复算.py"'),
     ],
     "实验记录/离线复核包/复算说明.md": [
@@ -194,7 +194,7 @@ CLEAN_RULES: dict[str, list[tuple[str, str]]] = {
          "`summary.json` 中的 `source_sha256` 为该次运行所用源码的指纹，可用于版本追溯；包内包含"),
         ("`summary.json` 中的 `source_sha256`、`config_sha256` 可与当前源码、配置文件复算比对；",
          "`summary.json` 中的 `source_sha256`、`config_sha256` 对应该次运行所用的源码与配置版本；"),
-        ('.venv\\Scripts\\python.exe "submission\\校赛初版\\实验记录\\离线复核包\\复算.py"',
+        ('.venv\\Scripts\\python.exe "submission\\提交版\\实验记录\\离线复核包\\复算.py"',
          'python "实验记录/离线复核包/复算.py"'),
         ("本包不替代 SwanLab 公开链接；两者关系见《实验记录链接》与《SwanLab记录公开性整改说明》。",
          "本包为可离线复算的本地证据；云端公开项目链接见《实验记录/实验记录说明.md》。"),
@@ -211,7 +211,7 @@ CLEAN_RULES: dict[str, list[tuple[str, str]]] = {
         ("两者尚未打通，属企业赛阶段工作。",
          "两类证据分别对应官方包训练协议与自研闭环，链路合并在平台接口下发后开展。"),
         ("cd D:/industrial_evolution\n./.venv/Scripts/python.exe -c \"", "python -c \""),
-        ("root = pathlib.Path('submission/校赛初版/实验记录/官方公开包CPU续训证据')",
+        ("root = pathlib.Path('submission/提交版/实验记录/官方公开包CPU续训证据')",
          "root = pathlib.Path('实验记录/官方公开包CPU续训证据')"),
         ("可在本机对 `official/cpu-a-guide-20261110-v1/rounds/round-1/checkpoint.npz` 求 SHA-256",
          "可在开发机对对应 `checkpoint.npz` 求 SHA-256"),

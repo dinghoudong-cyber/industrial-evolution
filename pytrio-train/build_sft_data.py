@@ -176,7 +176,7 @@ def main() -> int:
         "--roots",
         nargs="*",
         default=[
-            "submission/校赛初版/实验记录/离线复核包",
+            "submission/提交版/实验记录/离线复核包",
             "runs",
         ],
         help="要扫描的目录（相对项目根，或绝对路径）",

@@ -1,7 +1,7 @@
 """离线复核包自检：从 events.jsonl / decisions.jsonl 复算决策链、上下线次数与版本链。
 
 用法（在项目根目录）：
-    .venv\\Scripts\\python.exe "submission\\校赛初版\\实验记录\\离线复核包\\复算.py"
+    .venv\\Scripts\\python.exe "submission\\提交版\\实验记录\\离线复核包\\复算.py"
 
 自动选择包内最后一个「闭环迭代-run-*」目录，不依赖网络、不读取模型权重、不修改任何文件。
 """

@@ -1,8 +1,0 @@
-文件：industrial-evolution-school-initial-source.zip
-大小：329,444 bytes
-文件数：105
-SHA-256：7ffd3d738e4a700b8925891df68f8ccebd34fe6d613314e4dd3b7af3b8841323
-
-生成方式：submission/校赛初版/打包源码.py（2026-11-12 第二轮整改后重新打包，含 LICENSE 与新增文档）
-校验：归档内包含 src/industrial_evolution/cli.py、LICENSE，且未包含 datasets、official、runs、submission、.venv、__pycache__、模型权重或个人 .env 文件。
-完整性以根目录 SHA256SUMS.txt 为准：sha256sum -c SHA256SUMS.txt（标准 <hash>␠␠<相对路径> 格式，实测 30/30 通过）。

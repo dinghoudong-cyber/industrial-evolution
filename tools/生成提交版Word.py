@@ -1,4 +1,4 @@
-"""按参考策划案的字体字号，生成校赛提交版的两份 Word 文档。
+"""按参考策划案的字体字号，生成提交版的两份 Word 文档。
 
 排版基准（逐项取自《【策划案】…（2026年秋季）.docx》）：
   纸张      Letter 12240 × 15840 twips
@@ -23,7 +23,7 @@ from docx.oxml.ns import qn  # noqa: E402
 from docx.shared import Pt, Twips  # noqa: E402
 
 ROOT = Path(r"D:\industrial_evolution")
-OUT = Path(r"D:\桌面\智训引擎-校赛提交")
+OUT = Path(r"D:\桌面\智训引擎-提交")
 OUT.mkdir(parents=True, exist_ok=True)
 
 BODY_SIZE = 10.5
@@ -211,10 +211,10 @@ def build(md_path: Path, out_path: Path) -> None:
 
 if __name__ == "__main__":
     build(
-        ROOT / "submission/校赛初版/设计说明/设计说明.md",
+        ROOT / "submission/提交版/设计说明/设计说明.md",
         OUT / "设计说明.docx",
     )
     build(
-        ROOT / "submission/校赛初版/技术报告/技术报告初稿.md",
+        ROOT / "submission/提交版/技术报告/技术报告正文.md",
         OUT / "技术报告.docx",
     )

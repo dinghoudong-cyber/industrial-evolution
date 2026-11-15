@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = Path(__file__).resolve().parent / "源码"
-ARCHIVE = OUT_DIR / "industrial-evolution-school-initial-source.zip"
+ARCHIVE = OUT_DIR / "industrial-evolution-source.zip"
 
 INCLUDE_DIRS = ("src", "configs", "tests", "tools", "docs")
 INCLUDE_FILES = (
