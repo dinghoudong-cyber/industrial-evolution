@@ -25,6 +25,29 @@ OUTPUT="${IE_RUN_ROOT:-/app/runs}"
 MODE="${1:-demo}"
 if [ "$#" -gt 0 ]; then shift; fi
 
+# 输出目录自适应：评测沙箱常用只读根文件系统（--read-only）加固容器，
+# 此时默认的 /app/runs 不可写。按 指定目录 → /app/runs → 临时目录 的顺序
+# 回退到第一个可写位置，避免在启动阶段因无法建目录而整体失败。
+ensure_writable() {
+  local dir="$1"
+  mkdir -p "$dir" 2>/dev/null || return 1
+  [ -w "$dir" ] || return 1
+  return 0
+}
+if ! ensure_writable "$OUTPUT"; then
+  for fallback in "${TMPDIR:-/tmp}/runs" /tmp/runs /var/tmp/runs; do
+    if ensure_writable "$fallback"; then
+      printf '[run.sh] 输出目录 %s 不可写，已回退到 %s\n' "$OUTPUT" "$fallback" >&2
+      OUTPUT="$fallback"
+      break
+    fi
+  done
+fi
+if ! ensure_writable "$OUTPUT"; then
+  printf '[run.sh] 错误：找不到可写输出目录。请为容器挂载可写卷或 tmpfs（例如 --tmpfs /tmp），或设置 IE_RUN_ROOT 指向可写路径。\n' >&2
+  exit 3
+fi
+
 # 记录开关统一从这里透传，评测方只需设置环境变量，不必改 YAML。
 RECORD_ARGS=()
 if [ "${IE_SWANLAB:-0}" = "1" ]; then
