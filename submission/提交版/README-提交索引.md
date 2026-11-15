@@ -9,7 +9,7 @@
 | 提交项 | 当前状态 | 文件 / 说明 |
 |---|---|---|
 | ① 系统镜像 | ✅ **齐** | `dist/industrial-evolution-school-2026-11-15.tar`（542 MiB，OCI layout）；`镜像/镜像与启动说明.md` 给出无外网四核 8 GiB 的 `docker load` + 受限 `docker run` 契约。本地已实测 `--network none --memory 1g --cpus 1 --read-only` 跑满 18 窗口、0 失败 |
-| ② Harness 及模型配置 | ✅ **齐** | `configs/`、`src/industrial_evolution/orchestrator.py`；`模型调用信息/模型与调用声明.md` 明确：Qwen3.8 27B/4B 在企业赛阶段才提供，LLM 调用 0 次、Token 0，配置里是占位符 |
+| ② Harness 及模型配置 | ✅ **齐** | `configs/`、`src/industrial_evolution/orchestrator.py`；`模型调用信息/模型与调用声明.md` 记录 PyTRiO 三轮 LoRA 续训与 Sampler 权重路径；`llm.enabled` 默认关闭，评测机运行时全离线 |
 | ③ 源代码、依赖与复现说明 | ✅ **齐** | `源码/industrial-evolution-source.zip`（含根目录 `LICENSE`）；`requirements.lock` 精确锁定；运行说明写明「无外网不能 `docker build`，只能 `docker load`」；`SHA256SUMS.txt` 标准格式，实测 `sha256sum -c` 全通过 |
 | ④ SwanLab 实验记录 | ⚠️ **唯一未达标项（已核实）** | 云端项目为**非公开**，匿名抓取返回「需要登录并确认访问权限」。整改步骤与匿名验收见 `实验记录/SwanLab记录公开性整改说明.md`；`实验记录/离线复核包/` 是**兜底证据，不替代公开要求**。**整改通过前不得标记达标** |
 | ⑤ 设计论证 | ✅ **齐** | `设计说明/设计说明.md`、`技术报告/技术报告正文.md`、排版版 `技术报告.html`、**`技术报告.pdf`（4 页，≤10 页）**；`docs/扩展性验证报告.md` |

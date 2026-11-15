@@ -23,7 +23,7 @@ from pathlib import Path
 
 ROOT = Path(r"D:\industrial_evolution")
 SRC = ROOT / "submission/提交版"
-OUT = Path(r"D:\桌面\智训引擎-提交")
+OUT = Path(r"D:\桌面\智训引擎-校赛提交")
 CHROME = Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
 
 ONEPAGER = SRC / "答辩/答辩一页纸.html"

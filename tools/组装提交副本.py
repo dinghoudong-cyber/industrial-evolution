@@ -1,6 +1,6 @@
 """组装「只含上交材料」的干净副本，并重新打包不含内部文档的源码归档。
 
-副本位置：D:\\桌面\\智训引擎-提交
+副本位置：D:\\桌面\\智训引擎-校赛提交
 原 submission/提交版/ 保留为内部工作目录，不做任何修改。
 """
 
@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(r"D:\industrial_evolution")
 SRC = ROOT / "submission/提交版"
-OUT = Path(r"D:\桌面\智训引擎-提交")
+OUT = Path(r"D:\桌面\智训引擎-校赛提交")
 NEW_IMAGE = ROOT / "dist/industrial-evolution-school-2026-11-15.tar"
 
 # 源码归档：只允许这些 docs 进入（其余为内部自评/整改/企业赛规划/开发笔记）

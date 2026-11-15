@@ -23,7 +23,7 @@ from docx.oxml.ns import qn  # noqa: E402
 from docx.shared import Pt, Twips  # noqa: E402
 
 ROOT = Path(r"D:\industrial_evolution")
-OUT = Path(r"D:\桌面\智训引擎-提交")
+OUT = Path(r"D:\桌面\智训引擎-校赛提交")
 OUT.mkdir(parents=True, exist_ok=True)
 
 BODY_SIZE = 10.5
