@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>答辩一页纸 · 工业模型自进化框架</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; font-size: 9pt;
+         line-height: 1.42; color: #1c2530; margin: 0; }
+  h1 { font-size: 16pt; color: #12385e; margin: 0 0 1mm; }
+  .lead { font-size: 9.3pt; color: #2b3b4b; background: #eef4fb;
+          border-left: 3px solid #2f6fb5; padding: 2mm 3mm; margin: 2.5mm 0 3mm; }
+  h2 { font-size: 10.5pt; color: #12385e; margin: 3mm 0 1.5mm;
+       border-bottom: 1px solid #c9d7e6; padding-bottom: .8mm; }
+  p, li { margin: 0 0 1.2mm; }
+  ol, ul { padding-left: 5mm; margin: 0 0 2mm; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.4pt; margin: 1mm 0 2mm; }
+  th, td { border: .5px solid #c9d4e0; padding: 1mm 1.6mm; }
+  th { background: #eaf1f8; color: #12385e; }
+  .cols { display: flex; gap: 4mm; }
+  .col { flex: 1; }
+  .warn { background: #fff7ed; border-left: 3px solid #d97706; padding: 1.8mm 2.5mm; font-size: 8.6pt; }
+  .quote { background: #f4f7fa; padding: 2mm 3mm; font-size: 8.8pt; color: #334; }
+  .foot { margin-top: 2.5mm; border-top: 1px solid #cdd8e3; padding-top: 1.2mm;
+          font-size: 7.8pt; color: #6b7783; }
+  code { font-family: Consolas, monospace; font-size: 8.2pt; color: #1d4d78; }
+  strong { color: #12385e; }
+  tr { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<h1>答辩一页纸 · 工业模型自进化框架</h1>
+<div class="lead"><strong>一句话</strong>：我们做的是一套<strong>无人干预的受控自进化 Harness</strong>——不是「每窗都重训」，而是让监测、诊断、实验、门控、上线/拒绝/回滚形成闭环，并把每一轮决策完整留痕。</div>
+
+<h2>我们真正立住的四件事</h2>
+<ol>
+<li><strong>闭环不是流程图</strong>：18 窗口合成流 6 次候选、4 次上线、2 次被否定的假设；回滚连同特征/性能/诊断/策略四类状态快照一起恢复。</li>
+<li><strong>抗过拟合有硬证据</strong>：候选训练与历史守护集严格隔离并带断言；扩展性实验中候选被拒 29 次、真实触发回滚 4 次，结果逐项留痕可查。</li>
+<li><strong>实验记录可复算</strong>：158 条事件、6 条完整「读历史→假设→实验→决策」链、逐批 <code>decisions.jsonl</code> 上线/不上线判断；离线复核包一键复算，不依赖云端链接。</li>
+<li><strong>资源行为可扩展</strong>：10 场景 × 2 组验证，样本放大 5.1 倍，墙钟只增 1.9 倍，内存稳定约 170 MiB，模型 &lt; 1.1 MiB；大规模场景累计 10,200 标签，全部窗口完成评估。</li>
+</ol>
+
+<h2>关键数字（都可现场复算）</h2>
+<table>
+<tr><th>项</th><th>值</th><th>项</th><th>值</th></tr>
+<tr><td>合成流平均增益（vs 自建静态对照）</td><td>+0.0617；多数场景为正</td><td>完整决策链</td><td>6 条（≥3），其中 2 条 refuted</td></tr>
+<tr><td>扩展性平均增益 / 失败·跳过窗口</td><td>+0.0417 / 0 · 0</td><td>容器</td><td>541 MiB，断网 1 GiB / 1 CPU 跑满 18 窗口</td></tr>
+<tr><td>工程验证</td><td>pytest 109 通过；ruff 全过</td><td>官方 A/B/C 续训（静态 → 2 epoch）</td><td>F1 0.714030→0.716641 / RMSE 681.16→656.35 / 52.87→52.74</td></tr>
+</table>
+
+<div class="cols">
+<div class="col">
+<h2>可复核的工程边界</h2>
+<div class="quote">
+<ul>
+<li><strong>全离线可运行</strong>：不依赖外部模型服务或网络访问，四核 8 GiB、无 GPU 环境下完成完整闭环。</li>
+<li><strong>权重不随包分发</strong>：提交目录无 <code>.joblib</code> / <code>.npz</code> 权重，运行时现场训练并登记版本链。</li>
+<li><strong>双约束抗过拟合</strong>：近期 holdout 与历史守护集分开评估；候选被拒 29 次、真实回滚 4 次，全部留痕。</li>
+<li><strong>云端 + 离线双轨记录</strong>：SwanLab 项目公开可匿名访问；断网时自动切换 <code>offline</code> 落盘，离线复核包保证可复算。</li>
+<li><strong>评估口径明确</strong>：公开开发包上的静态基线与续训结果单独列出，与自研闭环证据分列呈现。</li>
+</ul>
+</div>
+</div>
+<div class="col">
+<h2>后续工作</h2>
+<ol>
+<li>打通标准 checkpoint 导出与按批次数据包协议，形成端到端评测链路；</li>
+<li>统一数据源适配层的清单解析格式，使不同格式的数据包走同一条编排链路；</li>
+<li>把逐批 <code>deploy/no_update</code> 判断接到在线批次握手；</li>
+<li>扩展策略层自适应、成本-增益帕累托分析与跨领域真实数据验证。</li>
+</ol>
+<h2>30 秒讲法</h2>
+<div class="quote">「我们把工业漂移下的模型更新做成了可审计的闭环：每次更新都有假设、有同口径验证、有历史守护集约束，失败实验和回滚都留下来。交付的是一套可离线复算的闭环证据、10 场景扩展性验证和完整合规材料；下一步是把标准 checkpoint 导出与按批次协议接进闭环，形成可直接评测加载的最终模型。」</div>
+</div>
+</div>
+
+<div class="foot">配套证据：<code>实验记录/离线复核包/复算.py</code> · <code>扩展性与创新验证.md</code> · <code>设计说明.docx</code> · <code>技术报告.pdf</code>　|　提交版 2026-11-14</div>
+
+</body>
+</html>

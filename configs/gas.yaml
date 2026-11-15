@@ -1,0 +1,75 @@
+# Gas Sensor Array Drift 数据集（6 类气体分类，10 个月批次）。
+#
+# 用法：
+#   python -m industrial_evolution.cli run-gas --data-dir datasets/gas --config configs/gas.yaml
+#
+# 分类分数是 balanced_accuracy（0~1），阈值沿用分类量级，但按 6 类任务与 10 个批次的
+# 天然漂移做了小幅收紧（min_improvement=0.01、max_historical_drop=0.08）。
+seed: 42
+task_type: classification
+
+# run-gas 不读这一段（窗口与特征由数据决定），仅满足配置 schema，并给 CLI 提供默认兜底。
+stream:
+  initial_samples: 3000
+  window_size: 400
+  n_windows: 27
+  n_features: 128
+  gradual_drift_start: 6
+  abrupt_drift_start: 12
+  label_noise: 0.0
+
+monitoring:
+  psi_threshold: 0.18
+  ks_threshold: 0.18
+  performance_drop_threshold: 0.06
+  label_shift_threshold: 0.12
+  consecutive_windows: 2
+  reference_update_rate: 0.15
+
+policy:
+  cooldown_windows: 2
+  rollback_patience: 2
+  rollback_drop: 0.12
+
+training:
+  replay_capacity: 4000
+  recent_fraction: 0.65
+  max_replay_samples: 1500
+  holdout_fraction: 0.30
+
+validation:
+  min_improvement: 0.01
+  max_historical_drop: 0.08
+  guard_samples: 800
+
+budget:
+  max_updates: 8
+  max_training_seconds: 240.0
+  max_labels: 15000
+  max_tokens: 0
+
+tracking:
+  run_root: "runs"
+  enable_swanlab: false
+  swanlab_project: "industrial_evolution"
+  swanlab_mode: "online"
+  swanlab_tags: ["industrial-evolution", "gas"]
+  swanlab_upload_artifacts: true
+  swanlab_artifact_max_mb: 64
+
+llm:
+  enabled: false
+  provider: openai_compatible
+  model: "LOCAL_MODEL_ID"
+  base_url: "http://127.0.0.1:8000/v1"
+  api_key_env: "LOCAL_LLM_API_KEY"
+  api_key_required: false
+  json_mode: true
+  temperature: 0.0
+  timeout_seconds: 20.0
+  max_retries: 1
+  max_output_tokens: 160
+  max_tokens_per_call: 800
+  max_calls: 8
+  min_confidence: 0.65
+  call_cooldown_windows: 2

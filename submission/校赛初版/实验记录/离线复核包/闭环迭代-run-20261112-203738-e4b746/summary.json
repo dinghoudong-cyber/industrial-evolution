@@ -1,0 +1,58 @@
+{
+  "run_id": "run-20261112-203738-e4b746",
+  "windows_processed": 18,
+  "successful_windows": 18,
+  "updates_attempted": 6,
+  "updates_deployed": 4,
+  "updates_rejected": 2,
+  "rollbacks": 0,
+  "failures": 0,
+  "skipped_windows": 0,
+  "llm_attempts": 0,
+  "llm_calls": 0,
+  "llm_fallbacks": 0,
+  "initial_score": 0.734093,
+  "final_score": 0.69906,
+  "mean_score": 0.6762,
+  "run_status": "complete",
+  "action_counts": {
+    "no_update": 12,
+    "retrain_with_replay": 6
+  },
+  "budget": {
+    "updates_used": 6,
+    "max_updates": 6,
+    "training_seconds_used": 0.863407,
+    "max_training_seconds": 120.0,
+    "labels_used": 4200,
+    "max_labels": 5000,
+    "tokens_used": 0,
+    "max_tokens": 0,
+    "budget_violations": 0
+  },
+  "final_model_version": "v003",
+  "final_score_model_version": "v003",
+  "final_deployed_model_version": "v004",
+  "final_deployed_score": 0.660055,
+  "final_deployed_guard_score": 0.600167,
+  "final_deployed_score_source": "candidate_holdout_window_17",
+  "final_deployed_window": 17,
+  "metric_name": "balanced_accuracy",
+  "label_budget_mode": "count_only",
+  "min_updates_required": 3,
+  "min_updates_met": true,
+  "vs_official_baseline": null,
+  "reproducibility": {
+    "source_sha256": "sha256:f33d92bfb5a0e0f7fbe33864cb9b54d9187894f8aa55b84b27767816620097fb",
+    "config_sha256": "sha256:948a1510352a02d7550a433a1e35c472c2dc3fca2054950868ce6d2ebbbab640",
+    "python_version": "3.13.7",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "dependency_versions": {
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
+      "scikit-learn": "1.9.1",
+      "pydantic": "2.14.1"
+    },
+    "container_image_digest": null
+  }
+}

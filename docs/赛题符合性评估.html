@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>赛题符合性评估 · industrial_evolution</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --ink:#0F172A; --ink2:#3D4A63; --ink3:#6B7A93;
+    --line:#E3E9F2; --bg:#F4F7FB;
+    --navy:#0B1B33; --blue:#2E6BE6; --cyan:#12B8C8;
+    --red:#D14B4B; --amber:#D98324; --green:#2C9B68; --violet:#6C5CE7;
+  }
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased}
+  .page{max-width:1180px;margin:0 auto;padding:0 40px 90px}
+  code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#F0F4FA;
+    border:1px solid #E0E8F3;border-radius:4px;padding:1px 5px;color:#243654}
+
+  .hero{background:radial-gradient(1100px 420px at 80% -20%,rgba(209,75,75,.30),transparent 60%),
+         radial-gradient(900px 380px at 6% 120%,rgba(46,107,230,.32),transparent 62%),
+         linear-gradient(140deg,#0A1729 0%,#12233D 55%,#0B1B33 100%);
+    color:#fff;border-radius:0 0 30px 30px;padding:54px 54px 44px;position:relative;overflow:hidden}
+  .hero:after{content:"";position:absolute;inset:0;
+    background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+    background-size:52px 52px;mask-image:radial-gradient(circle at 30% 20%,#000,transparent 78%)}
+  .hero>*{position:relative;z-index:1}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;letter-spacing:.14em;
+    color:#F0B4B4;border:1px solid rgba(209,75,75,.45);padding:6px 14px;border-radius:100px;
+    background:rgba(209,75,75,.12)}
+  .hero h1{font-size:38px;line-height:1.25;font-weight:750;letter-spacing:-.4px;margin:20px 0 14px}
+  .hero h1 em{font-style:normal;color:#5FE3EC}
+  .hero .lede{font-size:16px;color:#B9C7DC;max-width:790px}
+  .stats{display:flex;gap:14px;margin-top:28px;flex-wrap:wrap}
+  .stat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:11px;
+    padding:12px 20px;min-width:132px}
+  .stat .v{font-size:26px;font-weight:750;letter-spacing:-.5px;line-height:1.1}
+  .stat .l{font-size:12px;color:#9FB2CC;margin-top:3px}
+  .stat.r .v{color:#F09A9A} .stat.a .v{color:#F2C078} .stat.g .v{color:#7FD8AC}
+
+  section{margin-top:52px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px}
+  .sec-num{font-family:ui-monospace,Consolas,monospace;font-size:13px;font-weight:700;color:#fff;
+    background:var(--navy);padding:4px 10px;border-radius:6px;letter-spacing:.06em}
+  .sec-head h2{font-size:24px;font-weight:730;letter-spacing:-.2px}
+  .sec-head .sub{font-size:13.5px;color:var(--ink3);margin-left:auto}
+
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;
+    border:1px solid var(--line);font-size:13.5px}
+  th{background:#F7FAFE;text-align:left;padding:12px 18px;font-weight:650;border-bottom:1px solid var(--line);font-size:13px}
+  td{padding:12px 18px;border-bottom:1px solid #F0F4F9;color:var(--ink2);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td b{color:var(--ink);font-weight:620}
+  .dot{display:inline-flex;align-items:center;gap:7px;font-weight:650;font-size:13px;white-space:nowrap}
+  .dot:before{content:"";width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .dot.r{color:#B23A3A} .dot.r:before{background:var(--red);box-shadow:0 0 0 3px rgba(209,75,75,.15)}
+  .dot.a{color:#A2650F} .dot.a:before{background:var(--amber);box-shadow:0 0 0 3px rgba(217,131,36,.16)}
+  .dot.g{color:#1D7A4F} .dot.g:before{background:var(--green);box-shadow:0 0 0 3px rgba(44,155,104,.15)}
+
+  .have{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 24px}
+  .have ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:12px 26px}
+  .have li{font-size:13.5px;color:var(--ink2);padding-left:24px;position:relative}
+  .have li:before{content:"✓";position:absolute;left:0;top:0;color:var(--green);font-weight:800}
+  .have li b{color:var(--ink);font-weight:650}
+
+  .gap{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:14px;
+    border-left:4px solid var(--line);position:relative}
+  .gap.p0{border-left-color:var(--red)}
+  .gap.p1{border-left-color:var(--amber)}
+  .gap.p2{border-left-color:#9AA9BF}
+  .gap-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .gap-id{font-family:ui-monospace,monospace;font-size:11.5px;font-weight:700;color:#fff;
+    background:var(--ink3);padding:2px 8px;border-radius:5px}
+  .gap.p0 .gap-id{background:var(--red)} .gap.p1 .gap-id{background:var(--amber)}
+  .gap h4{font-size:15.5px;font-weight:700;flex:1 1 320px}
+  .badge{font-size:11.5px;padding:2px 9px;border-radius:100px;font-weight:650}
+  .b-red{background:#FDECEC;color:#B23A3A} .b-org{background:#FDF2E4;color:#A2650F}
+  .b-green{background:#E9F7EF;color:#1F7A50}
+  .page table code{overflow-wrap:anywhere}
+  .b-gray{background:#EEF1F6;color:#5A6880}
+  .rows{margin-top:12px;display:grid;gap:8px}
+  .row{display:grid;grid-template-columns:74px 1fr;gap:14px;font-size:13.3px;color:var(--ink2)}
+  .row .k{font-size:12px;color:var(--ink3);padding-top:1px}
+  .row .v b{color:var(--ink);font-weight:620}
+  .row .v code{white-space:nowrap}
+  .fix{background:#F3F8FF;border:1px dashed #C6D9F7;border-radius:9px;padding:10px 14px;font-size:13.2px;color:#1E3A6B}
+
+  .plan{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .plan table{border:0;border-radius:0}
+  .note{font-size:12.5px;color:var(--ink3);margin-top:14px;padding-left:14px;border-left:2px solid var(--line)}
+  .divider{height:1px;background:var(--line);margin:24px 0}
+  @media print{body{background:#fff}.page{max-width:none;padding:0}.hero{border-radius:0}
+    section,.gap,.plan{page-break-inside:avoid}}
+  @media (max-width:900px){
+    .page{padding:0 16px 60px}.hero{padding:36px 22px;border-radius:0 0 18px 18px}
+    .hero h1{font-size:27px}.have ul{grid-template-columns:1fr}
+    .row{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">赛题符合性评估 · industrial_evolution v0.1.0 · 2026-11-08（当日修订：P0 全部闭环）</div>
+  <h1>工程闭环是真的，<br><em>四个阻断项已在当日全部闭环</em></h1>
+  <p class="lede">代码结构、状态机、回滚、预算账本、测试都是自己搭的，比多数参赛队扎实。上午判定出的四个阻断项——<b>驱动模型锁死 DeepSeek</b>、<b>镜像缺 LLM 与 SwanLab 依赖</b>、<b>无官方数据包适配</b>、<b>镜像从未构建</b>——现已全部修复并通过实跑验证。仍未闭合的是两处<b>天花板</b>：<b>「实验记录规范」</b>与<b>「≥3 次决策链」</b>。</p>
+  <div class="stats">
+    <div class="stat g"><div class="v">55/55</div><div class="l">测试全过（实跑）</div></div>
+    <div class="stat r"><div class="v">4 → 0</div><div class="l">阻断级缺口（已闭环）</div></div>
+    <div class="stat g"><div class="v">546 MB</div><div class="l">镜像实建并断网跑通</div></div>
+    <div class="stat a"><div class="v">2</div><div class="l">仍缺的评分门槛</div></div>
+  </div>
+</div>
+
+<div class="page">
+
+  <div style="margin:26px 0 6px;border:1px solid #BFE3D0;background:#F2FAF5;border-radius:14px;padding:22px 26px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <span style="font-size:12px;letter-spacing:.06em;color:#2C9B68;border:1px solid #BFE3D0;background:#fff;border-radius:100px;padding:4px 12px">修订记录 · 2026-11-08 当日</span>
+      <span style="font-size:13.5px;color:#3E5448">以下是评估之后的修订结果。上文判定保留为当日上午的快照，用于对照。</span>
+    </div>
+    <table style="margin:0;font-size:13.5px">
+      <thead><tr><th style="width:12%">编号</th><th style="width:16%">状态</th><th style="width:72%">修订内容与验证证据</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>P0-1</b></td>
+          <td><span class="badge b-green">已修复</span></td>
+          <td><code>LLMConfig</code> 增加 <code>provider</code>（<code>deepseek</code> / <code>openai_compatible</code>）、<code>api_key_required</code>、<code>json_mode</code>、<code>allowed_hosts</code>；新增 <code>llm/openai_provider.py</code> 与 <code>llm/factory.py</code>，<code>DeepSeekProvider</code> 退化为别名。实测：本地 OpenAI 兼容端点跑满 18 窗口，<code>llm_calls=6 / llm_fallbacks=0</code>，Token 记账 2214。</td>
+        </tr>
+        <tr>
+          <td><b>P0-2</b></td>
+          <td><span class="badge b-green">已修复</span></td>
+          <td>新增 <code>requirements-extras.txt</code>（openai / swanlab），Dockerfile 改为「严格锁 + 区间约束」双层安装；<code>env-check</code> 实测输出 <code>openai 3.41.0</code>、<code>swanlab 0.10.4</code> 均可用。核心依赖仍由 <code>requirements.lock</code> 精确锁定。</td>
+        </tr>
+        <tr>
+          <td><b>P0-4</b></td>
+          <td><span class="badge b-green">已修复</span></td>
+          <td>新增 <code>run.sh</code> 统一入口（demo / csv / smoke / check）、Dockerfile 改用 <code>ENTRYPOINT</code> 与 <code>ENV IE_CONFIG / IE_RUN_ROOT</code>；<code>env-check</code> 可做构建后首轮自检。<b>已在本机实际构建并断网运行验证</b>：546 MB / 35 秒，<code>--memory 1g --cpus 1 --read-only</code> 下 18 窗口 0 失败。</td>
+        </tr>
+        <tr>
+          <td><b>P0-3</b></td>
+          <td><span class="badge b-org">部分修复</span></td>
+          <td>新增 <code>data/official.py</code>：清单优先（<code>manifest.json/yaml</code>）+ 命名推断 + 命令行覆盖，预检会挡住目标列缺失、非数值特征、标签缺失、初始集与流ID重复、流不足一窗；新增 <code>run-official</code> 子命令与 <code>configs/official.yaml</code>。自造数据包实测 6 窗口、3 次更新尝试、2 次上线、0 失败。<b>真实数据包尚未到手，标签延迟与官方评测脚本直连仍未支持。</b></td>
+        </tr>
+        <tr>
+          <td><b>P1-1</b></td>
+          <td><span class="badge b-green">已修复</span></td>
+          <td>最终分归属：摘要新增 <code>final_deployed_score</code> / <code>final_deployed_guard_score</code> / <code>final_deployed_score_source</code>，取最终部署版本上线时的 holdout 得分，不再拿旧冠军的分数代表最终模型；静态基线无部署时显式给 <code>null</code> 并写入 <code>final_deployment_score_missing</code> 事件。注意：直接拿最后窗口给新版本补评会把分数虚高到 0.896（候选训练用的正是该窗口前 70%），因此改用上线时那份未参与训练的 holdout。</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:14px;font-size:13px;color:#3E5448">测试数量由 35 增至 <b>55</b>，全部通过；<code>ruff check</code> / <code>format</code> 无告警。新增用例覆盖端点安全校验、无鉴权本地端点、<code>response_format</code> 降级重试、provider 工厂分派，以及官方数据包的清单解析、ID唯一性、非数值列拦截与端到端跑通。</div>
+  </div>
+
+  <!-- 01 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2>体检结果：门禁与交付物</h2>
+      <span class="sub">按赛题的五项基础门槛 + 四件套逐项判定</span>
+    </div>
+    <table>
+      <thead><tr><th style="width:26%">赛题要求</th><th style="width:52%">当前状态（有证据）</th><th style="width:22%">判定</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>① 无人干预跑完全部阶段</b></td>
+          <td>合成流上能完整跑完并输出 summary（<code>runs/final-cli-tuned</code> 18 窗口、0 失败）；异常有兜底不中断。但官方数据流未接，且标注配额耗尽会让整个窗口判失败。</td>
+          <td><span class="dot a">部分具备</span></td>
+        </tr>
+        <tr>
+          <td><b>② 完整留存实验记录</b></td>
+          <td>SwanLab 默认关闭；开启后只镜像标量指标与 <code>str(payload)</code>，无 step、无 artifact、无 run 名称与假设字段。</td>
+          <td><span class="dot r">未达标</span></td>
+        </tr>
+        <tr>
+          <td><b>③ ≥3 次「读历史→提假设→做实验→做决策」</b></td>
+          <td>LLM 只在"规则已决定更新"时做一次同意/否决，请求体里没有历史实验；决策记录里没有假设与预期效果。</td>
+          <td><span class="dot r">未达标</span></td>
+        </tr>
+        <tr>
+          <td><b>④ 综合性能不低于官方静态基线</b></td>
+          <td>只有自建的"关掉更新"对照组（<code>configs/static.yaml</code>，均值 0.6145 vs 0.6762）。官方静态基线与官方主指标未接入，无法自证。</td>
+          <td><span class="dot a">无法自证</span></td>
+        </tr>
+        <tr>
+          <td><b>⑤ 材料完整、代码可复现</b></td>
+          <td>代码可跑、测试全过、文档齐全（4 篇）；但无 git 版本、镜像未构建验证、无报告与合规声明。</td>
+          <td><span class="dot a">部分具备</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="sec-head" style="margin-top:30px">
+      <h2 style="font-size:18px">四件套完成度</h2>
+    </div>
+    <table>
+      <thead><tr><th style="width:22%">交付项</th><th style="width:56%">现状</th><th style="width:22%">判定</th></tr></thead>
+      <tbody>
+        <tr><td><b>① 系统镜像</b></td>
+          <td>Dockerfile 存在但从未构建通过（README 第 158 行自己注明）；<code>CMD</code> 跑的是合成 demo 而不是评测流；无 <code>run.sh</code> 一键入口与挂载约定。</td>
+          <td><span class="dot a">未验证</span></td></tr>
+        <tr><td><b>② 源码与配置</b></td>
+          <td>分层清晰、类型严格、测试 35 项全过。<b>但没有 git 仓库</b>，无法证明迭代过程与可复现的提交点。</td>
+          <td><span class="dot g">基本达标</span></td></tr>
+        <tr><td><b>③ 报告与实验</b></td>
+          <td>有工程文档（用户说明、算力说明、优化记录），<b>没有设计论证报告</b>；SwanLab 无可提交链接。</td>
+          <td><span class="dot r">缺失</span></td></tr>
+        <tr><td><b>④ 合规与展示</b></td>
+          <td>无 LICENSE、无第三方许可证清单、无模型/数据使用声明；无演示脚本与答辩材料。</td>
+          <td><span class="dot r">缺失</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2>已经立住的部分（别返工）</h2>
+      <span class="sub">这些是你们真实的优势</span>
+    </div>
+    <div class="have">
+      <ul>
+        <li><b>五步闭环是真实现了</b>，不是画图：监测→诊断→决策→训练→评估→上线/拒绝→回滚，状态机带迁移事件。</li>
+        <li><b>回滚带完整状态快照</b>：模型 + 特征检测器 + 性能检测器 + 诊断器 + 策略状态一起回滚，比只回滚权重高一个档次。</li>
+        <li><b>训练集与历史守护集严格隔离</b>，并有断言防止重叠——这是"抗遗忘"论证的硬证据。</li>
+        <li><b>预算账本按"首次访问计费"</b>，标注去重、Token、训练秒数、更新次数四类都在记，正好对上客观分的三个成本维度。</li>
+        <li><b>Champion-Challenger 双门控</b>：近期提升门槛 + 历史退化红线，拒绝理由会落库。</li>
+        <li><b>异常不中断</b>：单窗口失败降级到 SAFE_FALLBACK 继续跑，run_status 会区分 complete/partial/failed。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 03 P0 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2>P0 · 阻断项：不补就没成绩</h2>
+      <span class="sub">建议 5–7 天内全部关闭</span>
+    </div>
+
+    <div class="gap p0">
+      <div class="gap-top"><span class="gap-id">P0-1</span><h4>驱动模型被锁死在 DeepSeek，无法切到 PyTRiO / Qwen</h4><span class="badge b-red">红线</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v"><code>config.py:77-80</code> 三个字段全是字面量：<code>provider: Literal["deepseek"]</code>、<code>base_url: Literal["https://api.deepseek.com"]</code>、<code>api_key_env: Literal["DEEPSEEK_API_KEY"]</code>。写别的值 pydantic 直接校验失败。</div></div>
+        <div class="row"><div class="k">影响</div><div class="v">评测断网，<code>api.deepseek.com</code> 必然超时；每窗口白等 <code>timeout 20s</code> 后降级为规则策略。<b>交付物里"大模型驱动 Harness"实际是空的</b>，主观分「方法设计」与加分项「自主决策」直接归零。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v"><code>provider</code> 改 <code>openai_compatible</code>，<code>base_url</code>/<code>api_key_env</code>/<code>model</code> 放开为普通字符串（默认 key 用 <code>EMPTY</code>，vLLM 接受任意值）；新增 <code>configs/pytrio.yaml</code> 指向 <code>http://127.0.0.1:8000/v1</code> + <code>Qwen3.8-27B</code>；类名改 <code>OpenAICompatProvider</code>（保留 DeepSeek 别名）；smoke test 改成本地探活，配置里出现 <code>api.deepseek.com</code> 时启动即报错。</div></div>
+        <div class="fix">验收：断网机器上 <code>llm-smoke-test</code> 返回真实 Qwen 响应，且 <code>llm_calls &gt; 0</code>、<code>llm_fallbacks = 0</code> 出现在 summary 里。</div>
+      </div>
+    </div>
+
+    <div class="gap p0">
+      <div class="gap-top"><span class="gap-id">P0-2</span><h4>镜像里根本没有 openai / swanlab 依赖</h4><span class="badge b-red">红线</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v"><code>requirements.lock</code> 只有 16 个包，<code>openai</code>、<code>swanlab</code> 都不在里面（它们是 <code>pyproject.toml</code> 里的 optional-dependencies）；<code>Dockerfile</code> 只 <code>pip install -r requirements.lock</code>。</div></div>
+        <div class="row"><div class="k">影响</div><div class="v">镜像里一旦开启 LLM，<code>import openai</code> 直接失败 → 永远走规则回退；SwanLab 同样 ImportError 被静默降级。也就是<b>判分用的那个镜像，Harness 的大模型部分和记录能力都是死的</b>。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v">镜像内装 <code>pip install -e ".[swanlab]"</code> + <code>httpx</code>（或干脆不用 openai SDK，直接 <code>requests</code> 打 <code>/chat/completions</code>，少一个依赖、少一个版本风险）；把 <code>openai</code>/<code>swanlab</code>/<code>httpx</code> 固化进 lock 文件；加一个 <code>--mode eval</code> 启动自检：依赖缺失直接非零退出，而不是静默降级。</div></div>
+        <div class="fix">验收：容器内 <code>python -c "import swanlab"</code> 通过；<code>--mode eval</code> 启动打印依赖自检表。</div>
+      </div>
+    </div>
+
+    <div class="gap p0">
+      <div class="gap-top"><span class="gap-id">P0-3</span><h4>官方数据包没有适配层，现在只能跑合成流和自己格式的 CSV</h4><span class="badge b-red">红线</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v">只有 <code>data/synthetic.py</code> 与 <code>data/stream.py</code>；<code>config.py:14-29</code> 的 <code>StreamConfig</code> 字段全是合成参数（<code>n_features</code>、<code>gradual_drift_start</code>…），无法表达官方包的 train / valid / 评测脚本 / 隐藏流结构。README 第 164 行也把它列为"后续接入点"。</div></div>
+        <div class="row"><div class="k">影响</div><div class="v">数据包一发布，配置层就跑不起来；改造成本会落在最后一周，那是最危险的时间点。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v">写 <code>data/official.py</code>：<code>OfficialPackageStream</code> 读 manifest（数据版本、特征清单、时间列、评测脚本入口），<code>initial_data()</code> 用 train+valid，<code>__iter__</code> 按隐藏流顺序产窗；<code>StreamConfig</code> 改成 <code>source: synthetic | csv | official</code> 的判别式配置。先用自己造的假包（同目录结构、同命名）跑通，等真包落地只换路径。</div></div>
+        <div class="fix">验收：<code>--source official --package &lt;dir&gt;</code> 用假包跑完整 run，产物与合成流一致。</div>
+      </div>
+    </div>
+
+    <div class="gap p0">
+      <div class="gap-top"><span class="gap-id">P0-4</span><h4>镜像从未构建验证，且跑的不是评测入口</h4><span class="badge b-green">已闭环</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">原状</div><div class="v"><code>CMD</code> 直接跑 <code>cli demo --config default.yaml</code>；没有 <code>ENTRYPOINT</code>、没有 <code>run.sh</code>、没有输出目录约定；<code>configs/*.yaml</code> 里 <code>run_root</code> 写死 <code>D:/…</code>，容器内会生成怪目录；镜像从未 build 过。</div></div>
+        <div class="row"><div class="k">处理</div><div class="v"><code>run.sh</code> 统一入口（demo / csv / smoke / check）；<code>ENTRYPOINT ["/app/run.sh"]</code> + <code>ENV IE_CONFIG / IE_RUN_ROOT</code>；<code>run_root</code> 改为相对 <code>runs</code>；补 <code>ARG PIP_INDEX_URL</code> 供国内构建换源（不影响锁定版本）。</div></div>
+        <div class="row"><div class="k">实测</div><div class="v">Docker Desktop 4.98 / 引擎 29.9.2 linux/amd64。构建 35 秒产出 546 MB 镜像；<code>docker run --network none --memory 1g --cpus 1 --read-only</code> 跑满 18 窗口、0 失败、耗时 7 秒；<code>final_score 0.69906</code>、v004 上线、holdout 0.660055，与宿主机逐位一致；<code>docker save</code> 产出 540 MB 离线包。</div></div>
+        <div class="row"><div class="k">同时发现</div><div class="v">镜像原先默认 <code>default.yaml</code>，其 <code>max_historical_drop=0.06</code> 会让 4 个候选全部被拒，<b>整轮零更新</b>，<code>final_score</code> 掉到 0.538。已把镜像默认配置改为 <code>tuned.yaml</code>（6 次尝试 / 4 次上线 / 0.69906）。</div></div>
+        <div class="fix">验收：<code>docker run --network none -m 1g --cpus 1 image</code> 一次跑完，退出码 0，摘要 <code>run_status=complete</code>。</div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 P1 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <h2>P1 · 分数天花板：决定你能到 70 分还是 85 分</h2>
+      <span class="sub">对应主观 65 + 加分 10</span>
+    </div>
+
+    <div class="gap p1">
+      <div class="gap-top"><span class="gap-id">P1-1</span><h4>SwanLab 记录太浅，撑不起《实验记录规范》</h4><span class="badge b-org">高</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v"><code>tracking/swanlab_tracker.py:19-26</code>：事件被塞成 <code>{"event/type":…, "event/payload": str(payload)}</code>，指标只留数值；没有 <code>step</code>、没有 <code>log_artifact</code>、没有 run 名称/标签/备注，<code>swanlab.init</code> 也没设 <code>mode</code>。</div></div>
+        <div class="row"><div class="k">影响</div><div class="v">评委打开链接看到的是一堆挤在一起的标量，<b>看不到"这次改动的假设是什么、成本多少、结论是什么"</b>。门槛②站不稳，65 分里的「实验规范与分析深度」也拿不到高分。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v">一次实验一个 run（或一段带 <code>step=window</code> 的区间），run 名用 <code>w12-retrain-h3</code> 这种可读格式；<code>config</code> 里写死数据版本、触发原因、假设 ID、预期效果；<code>log_artifact</code> 上传 <code>registry.json</code>、决策日志、模型文件；summary 写 <code>swanlab.log({"conclusion":...})</code>；提供 <code>mode=local/cloud/offline</code> 三档。</div></div>
+        <div class="fix">验收：SwanLab 项目里有 ≥10 个带名称的 run，每个都能点开看到假设→配置→曲线→结论四段。</div>
+      </div>
+    </div>
+
+    <div class="gap p1">
+      <div class="gap-top"><span class="gap-id">P1-2</span><h4>「读历史→提假设→做实验→做决策」只做了最后一环</h4><span class="badge b-org">高</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v"><code>llm/provider.py:10-30</code> 请求体只有当前窗口的 15 个标量，无历史；<code>policy/hybrid_policy.py:31-33</code> 规则不更新就直接返回，LLM 仅对 <code>RETRAIN_WITH_REPLAY</code> 做二选一否决；<code>llm/schemas.py:6-9</code> 白名单只有两个动作。</div></div>
+        <div class="row"><div class="k">影响</div><div class="v">门槛③「至少 3 次」实际是 <b>0 次</b>。这不是补文档能解决的，是协议本身不支持。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v">新增 <code>experiment_memory.py</code>：读历史 <code>summary.json</code>+<code>metrics.csv</code>，生成 <code>history_digest</code>（最近 K 次：假设 / 动作 / Δ主指标 / 成本 / 采纳与否）注入 prompt；动作白名单扩到 <code>{no_update, retrain_with_replay, recalibrate_threshold, incremental_finetune, request_labels}</code>；要求模型输出 <code>hypothesis</code>、<code>expected_effect</code>、<code>cost_budget</code> 三个字段；落库 <code>decisions.jsonl</code>（含决策前后指标），这就是可审计的决策链。</div></div>
+        <div class="fix">验收：<code>decisions.jsonl</code> 里能找到 ≥3 条带 hypothesis + 实验结果 + 采纳理由的完整链路，报告直接引用。</div>
+      </div>
+    </div>
+
+    <div class="gap p1">
+      <div class="gap-top"><span class="gap-id">P1-3</span><h4>第二层 RSI（策略自改进）整体缺位</h4><span class="badge b-org">高</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v">触发阈值、冷却期、回滚幅度全部写死在 <code>configs/*.yaml</code>；<code>policy/rule_policy.py</code> 只维护 <code>signal_streak</code> 与 <code>last_update_window</code>，没有任何参数自适应。</div></div>
+        <div class="row"><div class="k">影响</div><div class="v">赛题明写"模型层自迭代 + 策略层自改进"两层。只做一层，技术路线论证就是半篇；加分项里「长期表现 / 自主决策 / 成本收益」三项都依赖它。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v">加 <code>strategy_state.json</code>（阈值、冷却、候选优先级、最小收益门槛）；每 N 个窗口做一次"策略更新提案 → 用历史窗口回测 → 采纳/拒绝"，并把这次更新<b>本身也记成一个实验</b>（元实验）。这是最容易拿 +10 的地方，也最能讲清"越做越聪明"。</div></div>
+        <div class="fix">验收：报告里有一张"策略参数随窗口演化"的曲线，且能说明第 X 窗口起无效更新占比下降。</div>
+      </div>
+    </div>
+
+    <div class="gap p1">
+      <div class="gap-top"><span class="gap-id">P1-4</span><h4>官方静态基线与成本公式没接，35 分没有优化目标</h4><span class="badge b-org">高</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v"><code>configs/static.yaml</code> 只是"自己关掉更新"的对照；<code>budget.py</code> 记的是秒/条/Token 绝对值，没有"单位增益消耗"这个量。主指标 <code>balanced_accuracy</code> 也写死在 adapter 里。</div></div>
+        <div class="row"><div class="k">影响</div><div class="v">门槛④无法自证；35 分客观分没有优化方向，报告里画不出"成本-增益"帕累托图——而那正是加分项「成本收益」要的东西。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v">新增 <code>cost.py</code>：<code>delta_metric_per_unit_cost = Δ主指标 / (GPU秒·系数 + 标注条数·系数 + Token·系数)</code>，系数进配置；主指标名进配置；把官方静态基线分数与一次性评估结果落成 <code>baseline.json</code>，每次 run 自动对比并写进 summary。</div></div>
+        <div class="fix">验收：summary 里有 <code>vs_official_baseline</code> 字段；报告有帕累托散点。</div>
+      </div>
+    </div>
+
+    <div class="gap p1">
+      <div class="gap-top"><span class="gap-id">P1-5</span><h4>标注延迟与配额退场未建模，配额一耗尽整窗判失败</h4><span class="badge b-org">高</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v"><code>orchestrator.py:270</code> 每窗口直接 <code>acquire_labels()</code> 后立刻 <code>score()</code>；<code>budget.py:26-31</code> 超预算直接 <code>raise BudgetExceededError</code>，被 <code>orchestrator.py:239</code> 捕获后整窗记为失败，<code>score</code> 变 NaN。</div></div>
+        <div class="row"><div class="k">影响</div><div class="v">真实评测里标签大概率有延迟/分窗发放。配额一用完，性能曲线直接断掉，<code>run_status</code> 变 <code>partial</code>，甚至影响最终评分口径。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v"><code>labels.py</code> 增加 <code>label_lag_windows</code> 与 <code>label_budget_per_window</code>；评估窗口与训练窗口解耦（用最近有标签窗口评估）；配额耗尽时降级为"只监测特征漂移、跳过评分"，而不是判整窗失败；把"要不要花配额要标签"变成策略动作之一。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 P2 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">05</span>
+      <h2>P2 · 隐患与小 bug</h2>
+      <span class="sub">不修也能跑，但答辩会被问住</span>
+    </div>
+
+    <div class="gap p2">
+      <div class="gap-top"><span class="gap-id">P2-1</span><h4>回滚路径在正式 run 里从未真正触发过</h4><span class="badge b-gray">中</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v"><code>runs/final-cli-tuned/summary.json</code> 里 <code>rollbacks: 0</code>；只有 <code>audit-*</code> 系列里模拟过。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v">刻意构造一个"坏候选"场景（如标签翻转 30% 的窗口），把回滚跑出来并把 <code>events.jsonl</code> 里的 <code>model_rolled_back</code> 留作答辩证据。</div></div>
+      </div>
+    </div>
+
+    <div class="gap p2">
+      <div class="gap-top"><span class="gap-id">P2-2</span><h4>最后上线的模型从未被评估过</h4><span class="badge b-gray">中</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v">同一 run 里 <code>final_score_model_version: v003</code> 而 <code>final_deployed_model_version: v004</code>——v004 上线后再没有窗口评分。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v">加一个"上线后影子窗口"（部署后下一窗强制用新模型评分并单独记录），summary 里两个字段就不会打架；报告里也能说"每个上线版本都有事后验证"。</div></div>
+      </div>
+    </div>
+
+    <div class="gap p2">
+      <div class="gap-top"><span class="gap-id">P2-3</span><h4>预算被用满，策略没有成本感知</h4><span class="badge b-gray">中</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v"><code>tuned.yaml</code> <code>max_updates: 6</code>，18 窗口跑完正好 <code>updates_used: 6/6</code>；剩余窗口即使漂移也无法更新。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v">策略里加入"剩余预算/剩余窗口"比值门控（后 1/3 窗口提高触发门槛），并把这一决策写成可解释理由——正好是「成本收益」加分项的素材。</div></div>
+      </div>
+    </div>
+
+    <div class="gap p2">
+      <div class="gap-top"><span class="gap-id">P2-4</span><h4>回滚不恢复 LLM 调用计数，预算语义不一致</h4><span class="badge b-gray">小</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v"><code>hybrid_policy.py:97-99</code> 的 <code>snapshot_state</code> 只存 <code>rule_policy</code>，<code>calls_used</code>/<code>fallbacks_used</code> 不在快照里，回滚后不回退。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v">把这两个计数纳入快照，或在回滚时显式记录"不回退、只记账"的理由。</div></div>
+      </div>
+    </div>
+
+    <div class="gap p2">
+      <div class="gap-top"><span class="gap-id">P2-5</span><h4>配置与文档的小瑕疵</h4><span class="badge b-gray">小</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">清单</div><div class="v">① <code>configs/*.yaml</code> 的 <code>run_root</code> 写死 <code>D:/…</code> 绝对路径，容器内会生成怪目录；② <code>.gitignore</code> 里有 <code>!.env.example</code> 但文件不存在，新人复现会卡在 API key；③ <code>docs/三轮测试优化记录.md</code> 标题是"四轮"、文件名是"三轮"；④ <code>LLMConfig.max_output_tokens: 160</code> 装不下加了 hypothesis 的新协议，需上调到 400+。</div></div>
+      </div>
+    </div>
+
+    <div class="gap p2">
+      <div class="gap-top"><span class="gap-id">P2-6</span><h4>没有版本管理</h4><span class="badge b-gray">中</span></div>
+      <div class="rows">
+        <div class="row"><div class="k">证据</div><div class="v">目录下无 <code>.git</code>，只有 <code>.gitignore</code>。</div></div>
+        <div class="row"><div class="k">改法</div><div class="v"><code>git init</code> 并按里程碑打 tag（<code>v0.1-baseline</code> / <code>v0.2-harness</code> / <code>v1.0-submit</code>）。"代码可复现"这条，评委看到提交历史会加分，看到只有一个压缩包会减分。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 排期 -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">06</span>
+      <h2>建议修复顺序</h2>
+      <span class="sub">按"阻断 → 分数 → 材料"三段推进</span>
+    </div>
+    <div class="plan">
+      <table>
+        <thead><tr><th style="width:12%">阶段</th><th style="width:44%">动作</th><th style="width:24%">产出</th><th style="width:20%">验收</th></tr></thead>
+        <tbody>
+          <tr><td><b>第 1–2 天</b></td>
+              <td>P0-1 放开 provider/base_url + <code>configs/pytrio.yaml</code>；P0-2 依赖入 lock</td>
+              <td>本地 vLLM 连通，<code>llm_calls &gt; 0</code></td>
+              <td>断网 smoke test 通过</td></tr>
+          <tr><td><b>第 3–4 天</b></td>
+              <td>P0-3 官方包适配器（先用假包）；P1-5 标签延迟与配额降级</td>
+              <td><code>data/official.py</code>、<code>labels.py</code></td>
+              <td>假包跑完完整 run</td></tr>
+          <tr><td><b>第 5 天</b></td>
+              <td>P0-4 镜像 + <code>run.sh</code> + 三次受限环境彩排</td>
+              <td>可运行的镜像与彩排记录</td>
+              <td><code>--network none -m 2g</code> 跑通</td></tr>
+          <tr><td><b>第 6–7 天</b></td>
+              <td>P1-1 SwanLab 改造；P1-2 决策链协议 + <code>decisions.jsonl</code></td>
+              <td>≥10 个可读 run、≥3 条决策链</td>
+              <td>门槛②③拿到证据</td></tr>
+          <tr><td><b>第 8–10 天</b></td>
+              <td>P1-3 策略自改进；P1-4 成本公式与官方基线对比</td>
+              <td><code>strategy_state.json</code>、<code>cost.py</code></td>
+              <td>策略曲线 + 帕累托图</td></tr>
+          <tr><td><b>第 11–14 天</b></td>
+              <td>P2 清理 + 报告 / 合规声明 / 演示材料 + <code>git</code> tag</td>
+              <td>四件套齐全</td>
+              <td>评委可独立复现</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">说明：以上判定基于 2026-11-08 的代码快照与 <code>runs/</code> 实测产物；测试套件我实跑过（35 项全过，耗时约 33 秒）。赛题官方数据包、评测脚本与基线尚未发布，相关条目（P0-3、P1-4）在资料到位后需按实际接口契约复核一次。</p>
+  </section>
+
+  <div class="divider"></div>
+  <p style="font-size:12.5px;color:var(--ink3);line-height:1.9">
+    评估口径：赛题五项基础门槛、四件套交付物、客观 35/主观 65/加分 10 的评分结构。文中代码位置以当前快照为准，改动后行号可能漂移，请按函数名定位。
+  </p>
+
+</div>
+</body>
+</html>

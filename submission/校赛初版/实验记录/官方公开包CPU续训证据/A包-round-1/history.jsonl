@@ -1,0 +1,2 @@
+{"stage_id": "round-1", "seed": 42, "epoch": 21, "step": 84, "loss": 0.13304095632256968, "validation": {"accuracy": 0.8858520900321544, "macro_f1": 0.7256954242091961}}
+{"stage_id": "round-1", "seed": 42, "epoch": 22, "step": 88, "loss": 0.12762980364838147, "validation": {"accuracy": 0.882636655948553, "macro_f1": 0.716641406136452}}

@@ -1,0 +1,47 @@
+{
+  "current": "v004",
+  "versions": [
+    {
+      "version": "v000",
+      "path": null,
+      "previous": null,
+      "source": "initial",
+      "score": 0.734093,
+      "training_seconds": 0.187165
+    },
+    {
+      "version": "v001",
+      "path": null,
+      "previous": "v000",
+      "source": "window_7",
+      "score": 0.649832,
+      "training_seconds": 0.094832
+    },
+    {
+      "version": "v002",
+      "path": null,
+      "previous": "v001",
+      "source": "window_11",
+      "score": 0.711429,
+      "training_seconds": 0.101218
+    },
+    {
+      "version": "v003",
+      "path": null,
+      "previous": "v002",
+      "source": "window_13",
+      "score": 0.7375,
+      "training_seconds": 0.133018
+    },
+    {
+      "version": "v004",
+      "path": null,
+      "previous": "v003",
+      "source": "window_17",
+      "score": 0.660055,
+      "training_seconds": 0.119931
+    }
+  ],
+  "weights_included": false,
+  "weights_note": "赛题规定严禁将模型权重打包进提交包。v000~v004 的 .joblib 权重未随本包分发，仅本机 runs/ 留存。本文件只保留版本链、得分与训练耗时等可复核元数据。"
+}

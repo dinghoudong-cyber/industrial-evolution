@@ -1,0 +1,54 @@
+seed: 42
+task_type: classification
+
+stream:
+  initial_samples: 600
+  window_size: 200
+  n_windows: 18
+  n_features: 8
+  gradual_drift_start: 6
+  abrupt_drift_start: 12
+  label_noise: 0.08
+
+monitoring:
+  psi_threshold: 0.18
+  ks_threshold: 0.18
+  performance_drop_threshold: 0.06
+  label_shift_threshold: 0.12
+  consecutive_windows: 1
+  reference_update_rate: 0.15
+
+policy:
+  cooldown_windows: 1
+  rollback_patience: 2
+  rollback_drop: 0.12
+
+training:
+  replay_capacity: 2400
+  recent_fraction: 0.65
+  max_replay_samples: 900
+  holdout_fraction: 0.30
+
+validation:
+  min_improvement: 0.008
+  max_historical_drop: 0.10
+  guard_samples: 500
+
+budget:
+  max_updates: 0
+  max_training_seconds: 120.0
+  max_labels: 5000
+  max_tokens: 0
+
+tracking:
+  run_root: "runs"
+  enable_swanlab: false
+  swanlab_project: "industrial_evolution"
+  # 上传形态：online（云端看板）/ local（本机看板）/ offline（落盘待 swanlab sync）/ disabled。
+  # 评测机无外网时必须选 offline 或 local，否则初始化失败会降级成纯本地记录。
+  swanlab_mode: "online"
+  swanlab_tags: ["industrial-evolution"]
+  # 结束后把 summary.json / metrics.csv / events.jsonl / 模型注册表 作为 run 文件上传，
+  # 别人拿到一次 run 就能复算，不用找你本地目录。
+  swanlab_upload_artifacts: true
+  swanlab_artifact_max_mb: 64

@@ -1,0 +1,2 @@
+{"stage_id": "round-1", "seed": 42, "epoch": 16, "step": 880, "loss": 0.0904629740941074, "validation": {"mae": 550.0394418787484, "rmse": 657.6454174514927}}
+{"stage_id": "round-1", "seed": 42, "epoch": 17, "step": 935, "loss": 0.08795341933808377, "validation": {"mae": 545.860566197937, "rmse": 656.3517854118093}}

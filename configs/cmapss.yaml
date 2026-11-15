@@ -1,0 +1,79 @@
+# C-MAPSS 涡扇发动机退化数据集（RUL 回归）。
+#
+# 用法：
+#   python -m industrial_evolution.cli run-cmapss --data-dir datasets/cmapss --config configs/cmapss.yaml
+#   python -m industrial_evolution.cli run-cmapss --data-dir datasets/cmapss --fd FD002 --config configs/cmapss.yaml
+#
+# 回归任务的分数是"负 RMSE"（越大越好，通常在 -20~-40）。因此监测/回滚/验证阈值必须按
+# RMSE 量级重标，不能沿用分类配置里 0~1 的小数值：performance_drop_threshold=2.0 表示
+# RMSE 上升 2 个单位才判定性能漂移，min_improvement=0.5 表示候选 RMSE 至少比冠军低 0.5。
+# 这些是起点值，正式评测前须按官方主指标与数据实测结果重新校准。
+seed: 42
+task_type: regression
+
+# run-cmapss 不读这一段（窗口与特征由数据决定），仅满足配置 schema，并给 CLI 的
+# --initial-size / --window-size 提供默认兜底。
+stream:
+  initial_samples: 3000
+  window_size: 500
+  n_windows: 35
+  n_features: 20
+  gradual_drift_start: 6
+  abrupt_drift_start: 12
+  label_noise: 0.0
+
+monitoring:
+  psi_threshold: 0.18
+  ks_threshold: 0.18
+  performance_drop_threshold: 2.0
+  label_shift_threshold: 0.12
+  consecutive_windows: 2
+  reference_update_rate: 0.15
+
+policy:
+  cooldown_windows: 2
+  rollback_patience: 2
+  rollback_drop: 3.0
+
+training:
+  replay_capacity: 4000
+  recent_fraction: 0.65
+  max_replay_samples: 1500
+  holdout_fraction: 0.30
+
+validation:
+  min_improvement: 0.5
+  max_historical_drop: 2.0
+  guard_samples: 800
+
+budget:
+  max_updates: 8
+  max_training_seconds: 240.0
+  max_labels: 25000
+  max_tokens: 0
+
+tracking:
+  run_root: "runs"
+  enable_swanlab: false
+  swanlab_project: "industrial_evolution"
+  swanlab_mode: "online"
+  swanlab_tags: ["industrial-evolution", "cmapss"]
+  swanlab_upload_artifacts: true
+  swanlab_artifact_max_mb: 64
+
+llm:
+  enabled: false
+  provider: openai_compatible
+  model: "LOCAL_MODEL_ID"
+  base_url: "http://127.0.0.1:8000/v1"
+  api_key_env: "LOCAL_LLM_API_KEY"
+  api_key_required: false
+  json_mode: true
+  temperature: 0.0
+  timeout_seconds: 20.0
+  max_retries: 1
+  max_output_tokens: 160
+  max_tokens_per_call: 800
+  max_calls: 8
+  min_confidence: 0.65
+  call_cooldown_windows: 2

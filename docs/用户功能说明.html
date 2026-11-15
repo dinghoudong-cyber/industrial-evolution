@@ -1,0 +1,356 @@
+<title>自进化操作台</title>
+<style>
+/* Layout: industrial field manual with a fixed-width reading rail and process spine. */
+:root {
+  color-scheme: light;
+  --page: #eef3f6;
+  --surface: #f8fbfc;
+  --surface-strong: #ffffff;
+  --ink: #17252e;
+  --muted: #58707d;
+  --line: #c7d5dc;
+  --accent: #087f8c;
+  --accent-soft: #d7eef0;
+  --safety: #c65d24;
+  --safety-soft: #f8e7dc;
+  --good: #247052;
+  --shadow: rgba(23, 37, 46, 0.10);
+  --display: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --body: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --utility: "IBM Plex Mono", "Cascadia Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #10191f;
+    --surface: #16242c;
+    --surface-strong: #1b2d36;
+    --ink: #e8f1f4;
+    --muted: #9eb2bc;
+    --line: #344a55;
+    --accent: #60c7cf;
+    --accent-soft: #173b41;
+    --safety: #ee9a66;
+    --safety-soft: #422a20;
+    --good: #78c8a3;
+    --shadow: rgba(0, 0, 0, 0.28);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #10191f;
+  --surface: #16242c;
+  --surface-strong: #1b2d36;
+  --ink: #e8f1f4;
+  --muted: #9eb2bc;
+  --line: #344a55;
+  --accent: #60c7cf;
+  --accent-soft: #173b41;
+  --safety: #ee9a66;
+  --safety-soft: #422a20;
+  --good: #78c8a3;
+  --shadow: rgba(0, 0, 0, 0.28);
+}
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap");
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  padding-inline: max(16px, 4vw);
+  padding-block: 32px 72px;
+  background:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px),
+    var(--page);
+  background-size: 32px 32px;
+  color: var(--ink);
+  font-family: var(--body);
+  line-height: 1.72;
+}
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible { outline: 3px solid var(--safety); outline-offset: 3px; }
+.shell { max-width: 1180px; margin: 0 auto; }
+.masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 28px;
+  align-items: end;
+  padding: clamp(28px, 6vw, 68px);
+  background: var(--surface-strong);
+  border-top: 6px solid var(--accent);
+  box-shadow: 0 18px 50px var(--shadow);
+}
+.kicker, .tag, .section-label {
+  font-family: var(--utility);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.2; }
+h1 { margin: 8px 0 18px; font-size: clamp(2.35rem, 7vw, 5.5rem); letter-spacing: -.055em; }
+h2 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.3rem); }
+h3 { margin: 0; font-size: 1.08rem; }
+p { max-width: 68ch; margin: 0; }
+.lede { font-size: 1.08rem; color: var(--muted); }
+.stamp {
+  display: grid;
+  gap: 4px;
+  min-width: 190px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-family: var(--utility);
+  font-size: .76rem;
+  color: var(--muted);
+}
+.stamp strong { color: var(--good); font-size: 1rem; }
+.flow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 18px;
+  background: var(--ink);
+  color: var(--page);
+}
+.flow span { padding: 14px 16px; border-right: 1px solid color-mix(in srgb, var(--page) 25%, transparent); font-size: .82rem; font-weight: 600; }
+.flow span:last-child { border-right: 0; }
+.layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 42px; margin-top: 42px; }
+nav { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; padding: 20px; background: var(--surface); border-left: 3px solid var(--accent); }
+nav strong { display: block; margin-bottom: 12px; font-size: .82rem; }
+nav a { display: block; padding: 7px 0; color: var(--muted); text-decoration: none; font-size: .86rem; }
+nav a:hover { color: var(--accent); }
+main { display: grid; gap: 26px; min-width: 0; }
+section { display: grid; gap: 18px; padding: clamp(24px, 4vw, 42px); background: var(--surface); border: 1px solid var(--line); }
+.section-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+.section-label { color: var(--safety); }
+.grid-2, .grid-3 { display: grid; gap: 18px; }
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.feature { display: grid; gap: 8px; padding-top: 14px; border-top: 3px solid var(--line); }
+.feature strong { font-family: var(--display); }
+.feature p, li { color: var(--muted); }
+.signal { padding: 18px 20px; background: var(--accent-soft); border-left: 4px solid var(--accent); }
+.warning { padding: 18px 20px; background: var(--safety-soft); border-left: 4px solid var(--safety); }
+code, pre { font-family: var(--utility); }
+code { color: var(--accent); font-size: .88em; }
+.code-wrap, .table-wrap { max-width: 100%; overflow-x: auto; }
+pre { margin: 0; padding: 18px; background: var(--ink); color: var(--page); font-size: .82rem; line-height: 1.65; }
+table { width: 100%; border-collapse: collapse; font-size: .88rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { color: var(--muted); font-family: var(--utility); font-size: .74rem; letter-spacing: .05em; text-transform: uppercase; }
+ul, ol { margin: 0; padding-left: 1.25rem; display: grid; gap: 7px; }
+.metric { display: grid; gap: 4px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.metric:last-child { border-bottom: 0; }
+.metric b { font-family: var(--utility); color: var(--good); font-size: 1.45rem; font-variant-numeric: tabular-nums; }
+footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding-top: 26px; color: var(--muted); font-size: .8rem; }
+@media (max-width: 820px) {
+  .masthead { grid-template-columns: 1fr; }
+  .stamp { min-width: 0; }
+  .layout { grid-template-columns: 1fr; }
+  nav { position: static; columns: 2; }
+  nav strong { column-span: all; }
+  .grid-3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  body { padding-block: 16px 48px; }
+  .masthead { padding: 24px 20px; }
+  .flow { grid-template-columns: 1fr 1fr; }
+  .flow span:nth-child(2) { border-right: 0; }
+  .flow span:nth-child(-n+2) { border-bottom: 1px solid color-mix(in srgb, var(--page) 25%, transparent); }
+  nav { columns: 1; }
+  section { padding: 22px 18px; }
+  .section-head, .grid-2 { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+<div class="shell">
+  <header class="masthead">
+    <div>
+      <div class="kicker">Industrial Model Evolution · User Field Guide</div>
+      <h1>自进化操作台</h1>
+      <p class="lede">一份面向使用者的现场手册：看懂模型为什么更新、为什么拒绝上线，以及发生退化时如何自动回到上一稳定版本。</p>
+    </div>
+    <div class="stamp">
+      <span>PROJECT</span><strong>industrial_evolution</strong>
+      <span>LOCATION</span><code>D:\industrial_evolution</code>
+      <span>STATUS</span><strong>闭环已验证</strong>
+    </div>
+  </header>
+  <div class="flow" aria-label="核心流程">
+    <span>01 · 监测漂移</span><span>02 · 决定更新</span><span>03 · 安全上线</span><span>04 · 持续回滚保护</span>
+  </div>
+
+  <div class="layout">
+    <nav aria-label="页内导航">
+      <strong>操作索引</strong>
+      <a href="#start">快速开始</a>
+      <a href="#workflow">完整流程</a>
+      <a href="#features">功能清单</a>
+      <a href="#config">配置选择</a>
+      <a href="#csv">接入 CSV</a>
+      <a href="#outputs">查看结果</a>
+      <a href="#safety">安全机制</a>
+      <a href="#deepseek">DeepSeek开发接入</a>
+      <a href="#trouble">常见问题</a>
+      <a href="#folders">项目目录</a>
+      <a href="#next">官方数据接入</a>
+    </nav>
+
+    <main>
+      <section id="start">
+        <div class="section-head"><span class="section-label">Start</span><h2>最快的使用方式</h2></div>
+        <p>打开 <code>D:\industrial_evolution</code>，双击 <code>运行演示.bat</code>。程序会使用调优配置依次模拟稳定、渐进漂移和突发漂移三个阶段。</p>
+        <div class="code-wrap"><pre>cd D:\industrial_evolution
+.\.venv\Scripts\python.exe -m industrial_evolution.cli demo `
+  --config configs\tuned.yaml</pre></div>
+        <div class="signal"><strong>结果位置</strong><br><code>D:\industrial_evolution\runs\run-日期时间-编号</code></div>
+      </section>
+
+      <section id="workflow">
+        <div class="section-head"><span class="section-label">Process</span><h2>一次运行中会发生什么</h2></div>
+        <div class="grid-2">
+          <div class="feature"><strong>先预测，后训练</strong><p>每个窗口先由当前 champion 预测和评分，再允许使用窗口数据训练，避免未来信息泄漏。</p></div>
+          <div class="feature"><strong>三路漂移证据</strong><p>PSI、KS、Wasserstein 与非有限值比例检查输入分布和数据质量；滚动指标和 Page-Hinkley 检查性能；分类任务同时检查完整类别分布。</p></div>
+          <div class="feature"><strong>预算内做决定</strong><p>连续确认、冷却期、更新次数、训练秒数、标签和 Token 预算共同决定是否训练。</p></div>
+          <div class="feature"><strong>回放训练</strong><p>近期样本用于适应新工况，历史代表样本用于降低灾难性遗忘。</p></div>
+          <div class="feature"><strong>双重上线门槛</strong><p>候选模型既要在近期留出集提升，也不能让历史守护集退化过多。</p></div>
+          <div class="feature"><strong>持续回滚保护</strong><p>上线后若连续退化，系统同时恢复上一稳定模型、性能基线、特征参考、标签参考和策略状态。</p></div>
+        </div>
+        <div class="warning"><strong>训练成功不等于允许上线。</strong> 新模型可能因近期提升不足或历史工况退化过大而被安全拒绝。</div>
+      </section>
+
+      <section id="features">
+        <div class="section-head"><span class="section-label">Capability</span><h2>用户能获得哪些功能</h2></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>功能</th><th>系统输出</th><th>用户价值</th></tr></thead>
+          <tbody>
+            <tr><td>漂移监测</td><td>漂移强度、重点特征、性能下降</td><td>知道模型何时开始失准</td></tr>
+            <tr><td>更新决策</td><td>不更新、回放训练或回滚</td><td>减少无效训练和预算浪费</td></tr>
+            <tr><td>候选评估</td><td>上线或拒绝及具体原因</td><td>防止新模型冒险替换稳定模型</td></tr>
+            <tr><td>模型注册</td><td>v000、v001 等可追踪版本</td><td>支持复盘、加载和回滚</td></tr>
+            <tr><td>成本账本</td><td>训练秒数、标签数、Token</td><td>对齐比赛的单位增益成本</td></tr>
+            <tr><td>实验记录</td><td>CSV、JSONL、JSON、模型文件</td><td>方便报告、答辩和复现</td></tr>
+            <tr><td>安全兜底</td><td>最后稳定 champion</td><td>单窗口故障不让全流程中断</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="config">
+        <div class="section-head"><span class="section-label">Profiles</span><h2>四套配置怎么选择</h2></div>
+        <div class="grid-2">
+          <div class="feature"><strong>tuned.yaml</strong><p>直接演示。针对当前合成流调优，响应更快，默认离线。</p></div>
+          <div class="feature"><strong>default.yaml</strong><p>通用起点。策略更保守，适合接入新数据后重新校准。</p></div>
+          <div class="feature"><strong>static.yaml</strong><p>禁止更新。用于证明自进化系统是否优于静态部署。</p></div>
+          <div class="feature"><strong>deepseek-dev.yaml</strong><p>仅用于DeepSeek开发验证。API异常时自动回退到规则策略。</p></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>关键参数</th><th>控制什么</th></tr></thead>
+          <tbody>
+            <tr><td><code>consecutive_windows</code></td><td>漂移需要连续出现多少个窗口才行动</td></tr>
+            <tr><td><code>cooldown_windows</code></td><td>更新后等待多久才能再次训练</td></tr>
+            <tr><td><code>recent_fraction</code></td><td>近期数据在候选训练中的比例</td></tr>
+            <tr><td><code>min_improvement</code></td><td>候选上线所需的最小近期提升</td></tr>
+            <tr><td><code>max_historical_drop</code></td><td>允许候选在历史守护集上退化多少</td></tr>
+            <tr><td><code>rollback_drop</code></td><td>上线后触发回滚的性能差值</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="csv">
+        <div class="section-head"><span class="section-label">Data</span><h2>接入自己的 CSV</h2></div>
+        <p>CSV 原始行顺序必须代表时间顺序。特征必须是数值列，可有缺失值但不能包含无穷值；分类目标允许离散数值或字符串类别，回归目标必须是有限数值。时间戳、字符串编号等特征应使用 <code>--drop-column</code> 排除。</p>
+        <div class="code-wrap"><pre>.\.venv\Scripts\python.exe -m industrial_evolution.cli run-csv `
+  --csv D:\数据\train.csv `
+  --target label `
+  --initial-size 1000 `
+  --window-size 200 `
+  --drop-column timestamp</pre></div>
+        <ul><li><code>initial-size</code>：最前面用于初始模型的行数。</li><li><code>window-size</code>：后续每个流式窗口的行数。</li><li><code>target</code>：真实标签所在列。</li></ul>
+      </section>
+
+      <section id="outputs">
+        <div class="section-head"><span class="section-label">Evidence</span><h2>如何查看运行结果</h2></div>
+        <div class="grid-2">
+          <div class="feature"><strong>summary.json</strong><p>整次运行摘要：窗口数、完整/部分/失败状态、训练次数、上线、拒绝、回滚、平均指标和预算。</p></div>
+          <div class="feature"><strong>metrics.csv</strong><p>每个窗口一行，可用 Excel 查看漂移、动作、分数和累计成本。</p></div>
+          <div class="feature"><strong>events.jsonl</strong><p>完整事件流水，回答何时发现漂移、为什么训练、为什么拒绝。</p></div>
+          <div class="feature"><strong>models\</strong><p>保存模型文件和 registry.json，标明当前 champion 及每个版本来源。</p></div>
+        </div>
+        <div class="grid-2">
+          <div class="metric"><span>静态基线平均指标</span><b>0.614526</b></div>
+          <div class="metric"><span>自进化平均指标</span><b>0.676200</b></div>
+          <div class="metric"><span>最后窗口绝对提升</span><b>+0.160815</b></div>
+          <div class="metric"><span>端到端运行异常</span><b>0</b></div>
+        </div>
+        <p class="lede">这些数字只用于验证合成数据闭环，不能代表官方隐藏测试成绩。</p>
+      </section>
+
+      <section id="safety">
+        <div class="section-head"><span class="section-label">Control</span><h2>安全与成本机制</h2></div>
+        <ol><li><strong>预算账本：</strong>标签首次用于评分、验证或训练时计费并按样本ID去重；训练和 Token 在动作前检查额度。</li><li><strong>冷却期：</strong>避免同一段漂移反复触发训练。</li><li><strong>独立历史守护集：</strong>守护样本永不进入训练回放，阻止验证泄漏。</li><li><strong>完整状态回滚：</strong>模型及全部监测参考一起恢复。</li><li><strong>原子写入：</strong>模型和注册表先写临时文件，再替换正式文件。</li><li><strong>可选服务隔离：</strong>SwanLab 失败会降级，不中断本地核心流程。</li></ol>
+      </section>
+
+      <section id="deepseek">
+        <div class="section-head"><span class="section-label">LLM Guardrail</span><h2>DeepSeek 开发接入</h2></div>
+        <p>DeepSeek只在规则策略已经确认漂移成立、冷却结束且训练预算允许后参与开发调试。正式 Harness 使用赛方建议的 Qwen3.8 27B 或 4B；PyTRiO 可作为 Qwen 的可选后训练路径，具体服务 ID 与接口以赛方资料为准。</p>
+        <div class="grid-2">
+          <div class="feature"><strong>默认完全离线</strong><p><code>tuned.yaml</code>、<code>default.yaml</code> 和 <code>static.yaml</code> 均不联网，Token为0。</p></div>
+          <div class="feature"><strong>显式开发配置</strong><p>只有使用 <code>configs\deepseek-dev.yaml</code> 才启用DeepSeek。正式 Harness 使用赛方建议的 Qwen3.8 27B 或 4B；PyTRiO 可选用于后训练。若提交后训练模型，模型 ID 和 API Key 按平台要求通过安全渠道提交。</p></div>
+          <div class="feature"><strong>秘密不落盘</strong><p>密钥仅从 <code>DEEPSEEK_API_KEY</code> 环境变量读取，不得写入YAML、代码、文档、聊天或Git。</p></div>
+          <div class="feature"><strong>失败自动回退</strong><p>密钥缺失、超时、限流、非法JSON或低置信度时使用原规则策略继续运行。</p></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>开发限制</th><th>当前值</th><th>作用</th></tr></thead>
+          <tbody>
+            <tr><td>模型</td><td><code>deepseek-flash</code></td><td>开发阶段策略判断</td></tr>
+            <tr><td>最大调用</td><td>6次</td><td>防止无限调用</td></tr>
+            <tr><td>总Token预算</td><td>5000</td><td>达到上限后停止访问API</td></tr>
+            <tr><td>最低置信度</td><td>0.65</td><td>不足时退回规则动作</td></tr>
+          </tbody>
+        </table></div>
+        <div class="code-wrap"><pre># 设置环境变量后，重新打开终端
+.\.venv\Scripts\python.exe -m industrial_evolution.cli llm-smoke-test `
+  --config configs\deepseek-dev.yaml</pre></div>
+        <div class="warning"><strong>该命令会发起一次真实请求并产生费用。</strong> 日常回归测试使用假提供商，不访问网络。完整开发演示将命令改为 <code>demo</code>。</div>
+        <p>真实用量可在 <code>summary.json</code>、<code>metrics.csv</code> 和 <code>events.jsonl</code> 查看；日志不会保存密钥或Authorization请求头。</p>
+      </section>
+
+      <section id="trouble">
+        <div class="section-head"><span class="section-label">Troubleshooting</span><h2>常见问题</h2></div>
+        <div class="grid-2">
+          <div class="feature"><strong>没有发生更新</strong><p>可能是漂移未达阈值、还在冷却期、候选提升不足、历史退化过大或预算耗尽。查看 metrics.csv 的 reason 列。</p></div>
+          <div class="feature"><strong>CSV 目标列不存在</strong><p>检查 <code>--target</code> 与 CSV 第一行是否完全一致，包括大小写和空格。</p></div>
+          <div class="feature"><strong>只接受数值特征</strong><p>删除时间戳和字符串列，或先编码类别特征。</p></div>
+          <div class="feature"><strong>SwanLab 不可用</strong><p>本地运行仍会继续，并记录 <code>tracker_mirror_failure</code> 或 <code>swanlab_disabled</code>。</p></div>
+          <div class="feature"><strong>终端中文乱码</strong><p>通常只是显示编码问题。结果文件统一为 UTF-8，CSV 首行带 BOM。</p></div>
+          <div class="feature"><strong>final_score 的含义</strong><p>它是最后成功窗口上、更新前模型的流式表现；<code>final_score_model_version</code> 与其配对，<code>final_deployed_model_version</code> 表示运行结束时实际部署版本。</p></div>
+        </div>
+      </section>
+
+      <section id="folders">
+        <div class="section-head"><span class="section-label">Structure</span><h2>项目文件夹怎么分工</h2></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>文件夹</th><th>主要职责</th><th>是否人工维护</th></tr></thead>
+          <tbody>
+            <tr><td><code>configs\</code></td><td>漂移阈值、更新策略、训练比例、上线门槛和预算</td><td>需要</td></tr>
+            <tr><td><code>docs\</code></td><td>用户说明、测试优化记录和项目结构文档</td><td>需要</td></tr>
+            <tr><td><code>runs\</code></td><td>每次实验的指标、事件、摘要和模型版本</td><td>只读分析</td></tr>
+            <tr><td><code>src\industrial_evolution\</code></td><td>正式业务代码和端到端自进化流程</td><td>需要</td></tr>
+            <tr><td><code>tests\</code></td><td>漂移、预算、训练、回滚、CLI和完整流程测试</td><td>随功能维护</td></tr>
+            <tr><td><code>.venv\</code></td><td>项目专用Python和第三方依赖</td><td>不要手改</td></tr>
+            <tr><td><code>.pytest_cache\ / __pycache__\</code></td><td>测试与Python自动生成的缓存</td><td>可安全清理</td></tr>
+          </tbody>
+        </table></div>
+        <div class="signal"><strong>完整目录手册</strong><br>每个子文件夹、主要文件、清理规则和镜像收录建议见 <a href="项目文件夹说明.md">docs\项目文件夹说明.md</a>。</div>
+      </section>
+
+      <section id="next">
+        <div class="section-head"><span class="section-label">Next</span><h2>官方数据发布后</h2></div>
+        <ol><li>新增官方评测 SDK 的数据流适配器。</li><li>替换为官方主指标和成本公式。</li><li>按标签延迟调整标签消费时机。</li><li>使用公开数据做 walk-forward 对照实验。</li><li>重新校准漂移、上线和回滚阈值。</li><li>接入 PyTRiO 与受约束的白名单策略智能体。</li><li>在离线、限时、限内存环境中冻结镜像。</li></ol>
+        <div class="warning"><strong>不要直接照搬合成数据的最佳参数。</strong> 正式阈值必须以官方数据、指标、标注规则和资源限制为准。</div>
+      </section>
+    </main>
+  </div>
+  <footer><span>工业模型自进化系统 · 用户现场手册</span><span>本地完整文档：docs\用户功能说明.md</span></footer>
+</div>

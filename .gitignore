@@ -1,0 +1,53 @@
+# ---------------- Python ----------------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest-tmp/
+*.egg-info/
+build/
+dist/
+.env
+.env.*
+!.env.example
+
+# ---------------- 运行产物 ----------------
+runs/*
+!runs/.gitkeep
+outputs/
+docker-runs/
+
+# ---------------- 数据与权重（合规：严禁入库/打包） ----------------
+# 官方 A/B/C 数据包由组委会分发，不随仓库分发
+official/
+# 本地数据集（C-MAPSS、燃气轮机等）
+datasets/
+# 模型权重与训练产物，任何形式都不入库
+*.npz
+*.npy
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.onnx
+*.h5
+*.pkl
+*.joblib
+# 镜像归档（体积过大，按提交材料单独提供）
+*.tar
+*.tar.gz
+
+# ---------------- 工具与编辑器 ----------------
+.ruff_cache/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.workbuddy/
+
+# ---------------- PyTRiO 训练工作区 ----------------
+pytrio-train/.venv/
+pytrio-train/_pkgs/
+pytrio-train/权重/
+pytrio-train/outputs/

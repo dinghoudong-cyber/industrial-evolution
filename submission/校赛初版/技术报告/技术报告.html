@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>工业模型自进化框架 · 技术报告</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 15mm 15mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", "SimSun", sans-serif;
+         font-size: 10pt; line-height: 1.62; color: #1c2530; margin: 0; }
+  h1 { font-size: 21pt; color: #12385e; margin: 0 0 4mm; letter-spacing: .5px; }
+  h2 { font-size: 13pt; color: #12385e; margin: 7mm 0 2.5mm;
+       border-left: 3.5px solid #2f6fb5; padding-left: 3mm; }
+  h3 { font-size: 11pt; color: #234; margin: 5mm 0 2mm; }
+  p { margin: 0 0 2.4mm; text-align: justify; }
+  .meta { color: #55636f; font-size: 9pt; border-bottom: 1px solid #cdd8e3; padding-bottom: 3mm; margin-bottom: 4mm; }
+  .note { background: #f2f7fc; border-left: 3px solid #2f6fb5; padding: 2.5mm 3mm;
+          margin: 3mm 0; font-size: 9.3pt; color: #2b3b4b; }
+  .warn { background: #fff7ed; border-left: 3px solid #d97706; padding: 2.5mm 3mm;
+          margin: 3mm 0; font-size: 9.3pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 2.5mm 0 3.5mm; }
+  th, td { border: .5px solid #c9d4e0; padding: 1.5mm 2mm; text-align: left; vertical-align: top; }
+  th { background: #eaf1f8; color: #12385e; font-weight: 600; }
+  tr { page-break-inside: avoid; }
+  ul, ol { margin: 0 0 2.4mm; padding-left: 6mm; }
+  li { margin-bottom: 1.2mm; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 8.8pt;
+         background: #f1f4f7; padding: 0 1mm; color: #1d4d78; }
+  strong { color: #12385e; }
+  .kv { font-size: 9.3pt; }
+  .foot { margin-top: 6mm; border-top: 1px solid #cdd8e3; padding-top: 2.5mm;
+          font-size: 8.5pt; color: #6b7783; }
+  section { page-break-inside: auto; }
+  .avoid { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<h1>工业模型自进化框架 · 技术报告</h1>
+<div class="meta">
+  <strong>队伍</strong>：会赢的，对不队（北京印刷学院）　
+  <strong>版本</strong>：提交版（2026-11-14）　
+  <strong>Harness</strong>：本项目自研 <code>EvolutionOrchestrator</code>　
+  <strong>运行环境</strong>：离线 CPU（四核 8 GiB、无 GPU、无外网）<br>
+  配套材料见《00-提交材料索引.md》；实验结论均标注数据来源与评估口径，可在提交目录内逐项复算。
+</div>
+
+<div class="note">
+<strong>阅读说明</strong>：报告中的实验结论均标注数据来源与评估口径；公开开发包相关结果标为开发参考，不与正式评测成绩混用，可在提交目录内逐项复算。
+</div>
+
+<h2>摘要</h2>
+<p>本文报告一个面向工业数据流漂移的受控持续学习框架。系统把数据质量检查、漂移监测、策略决策、回放训练、Champion-Challenger 门控、版本管理与异常回滚组成无人干预闭环，并把每窗口的「观察→诊断→决策→预期→结果→判定」完整留痕。</p>
+<p>本报告围绕闭环机制、工程验证与交付规范三部分展开：系统提供标签预算记账、逐批次上线判断、可配置主指标、与静态基线的显式比较以及迭代次数校验；交付材料包含无权重源码、标准格式校验和、LICENSE 与逐项许可证清单、无外网运行契约和离线可复核实验记录。第 4 节给出 10 场景 × 2 组的扩展性验证，所有实验均标注数据来源、运行配置与一键复算路径。</p>
+
+<h2>1. 问题与设计目标</h2>
+<p>工业设备与传感器数据会随传感器老化、设备磨损、工况变化发生协变量漂移与概念漂移。固定模型逐渐失效，无条件频繁更新又会引入过拟合与资源浪费。目标不是「每个窗口都训练」，而是构建带监测、验证、预算约束和回滚能力的更新流程：保持时间顺序；严格分离候选训练数据、近期 holdout 与历史守护集；记录每次假设及验证结果；在候选不可靠或异常时保留稳定版本。</p>
+
+<h2>2. 系统架构与方法</h2>
+<p>处理路径：数据源适配 → 校验与窗口切分 → 漂移/质量监测 → 策略决策 → 回放训练候选 → 近期 holdout 与历史守护集评估 → 上线或拒绝 → 必要时回滚。模块位于 <code>src/industrial_evolution/</code> 的 <code>data/</code>、<code>monitoring/</code>、<code>policy/</code>、<code>training/</code>、<code>evaluation/</code>、<code>models/</code>、<code>tracking/</code>，由 <code>orchestrator.py</code> 编排，<code>cli.py</code> 与 <code>run.sh</code> 提供入口。</p>
+<p>特征监测使用 PSI、KS、Wasserstein 与非有限值质量告警；性能监测结合滚动均值与 Page-Hinkley。Champion-Challenger 采用双门槛：近期提升须 ≥ <code>min_improvement</code>，历史守护集退化须 ≤ <code>max_historical_drop</code>；被拒绝的假设同样入库。回滚会一并恢复特征/性能/诊断/策略四类监测状态快照。</p>
+
+<h3>2.1 关键机制设计</h3>
+<table class="avoid">
+<thead><tr><th style="width:22%">机制</th><th style="width:44%">设计目标</th><th>实现落点</th></tr></thead>
+<tbody>
+<tr><td>标签预算 <code>count_only</code></td><td>按批次提供标签的运行模式下，配额记账与窗口推进解耦</td><td><code>BudgetConfig.label_budget_mode</code>：支持记账与强制约束两种模式</td></tr>
+<tr><td>逐批次 <code>decisions.jsonl</code></td><td>按批次协议先给出本批上线判断，再取下一批</td><td>每窗口一行 <code>deploy</code>/<code>no_update</code>，含模型版本、理由、历史引用；可选同步 stdout</td></tr>
+<tr><td>可配置主指标</td><td>分类与回归任务按官方口径选用 Macro-F1 / RMSE 等指标</td><td><code>validation.score_metric</code>；<code>configs/official.yaml</code> 已对齐 A 包</td></tr>
+<tr><td>基线显式比较</td><td>「最终不低于官方静态基线」需同口径</td><td><code>vs_official_baseline</code>：仅在口径一致时给出增益，否则记为 <code>null</code></td></tr>
+<tr><td>迭代次数校验</td><td>赛题「至少三次尝试迭代」</td><td><code>budget.min_updates=3</code>，不足时写事件并置 <code>min_updates_met=false</code></td></tr>
+</tbody></table>
+<p class="kv">迭代次数由配置约束并在运行摘要中标记（<code>min_updates_met</code>）；本报告引用的证据链均满足 ≥3 次。</p>
+
+<h2>3. 安全、预算与可复现性</h2>
+<p>数据只读取显式指定的文件；官方包适配器校验 schema、ID 唯一性、特征数值与 train/validation 实体隔离，标签不作输入特征。候选训练、holdout、历史守护集职责分离并有断言防止重叠。预算记账更新次数、训练秒数、标签数与 Token；异常窗口切换为安全保持状态并继续闭环。</p>
+<p>本地 <code>events.jsonl</code>、<code>metrics.csv</code>、<code>summary.json</code>、<code>decisions.jsonl</code> 是主记录；SwanLab 为可选镜像，上传失败不中断闭环。摘要保留源码/配置 SHA-256、依赖版本与容器标识。API Key 不进入配置、源码、日志、SwanLab run、镜像或报告。静态检查与测试用于说明软件工程状态，模型表现另由第 4 节实验给出。</p>
+
+<h2>4. 实验设置与结果</h2>
+
+<h3>4.1 合成漂移流工程对照</h3>
+<p>固定种子 42、同一组 18 个合成窗口：静态对照平均平衡准确率 0.614526、末窗 0.538245；自进化 0.676200、末窗 0.699060，尝试更新 6 次、上线 4 次、0 异常。末窗得分对应冠军版本 v003；第 4 次上线发生在末窗之后，该版本的上线依据为 holdout 得分 0.660055。实验按设定的 18 个窗口结束，此后不再产生窗口评分。该实验用于验证闭环流程在受控漂移条件下的有效性。</p>
+
+<h3>4.2 扩展性验证</h3>
+<p><code>tools/扩展性验证实验.py</code> 在「数据规模 × 标签噪声 × 漂移时机 × 特征维度」上跑 10 场景 ×（自进化/静态对照）= 20 次独立运行；原始数据在 <code>runs/scalability/实验结果.json</code>，完整分析见 <code>docs/扩展性验证报告.md</code>。</p>
+<table class="avoid">
+<thead><tr><th style="width:20%">场景</th><th>自进化 mean</th><th>静态 mean</th><th>平均增益</th><th>迭代/上线/拒绝/回滚</th><th>墙钟 s</th><th>标签数</th></tr></thead>
+<tbody>
+<tr><td>基准 200×18</td><td>0.6762</td><td>0.6145</td><td><strong>+0.0617</strong></td><td>6/4/2/0</td><td>1.78</td><td>4,200</td></tr>
+<tr><td>小规模 100×14</td><td>0.6675</td><td>0.6361</td><td>+0.0314</td><td>6/4/2/0</td><td>1.48</td><td>2,000</td></tr>
+<tr><td>大规模 400×24</td><td>0.6856</td><td>0.6055</td><td><strong>+0.0801</strong></td><td>8/3/5/0</td><td>2.87</td><td>10,200</td></tr>
+<tr><td>低标签噪声 0.02</td><td>0.6992</td><td>0.6608</td><td>+0.0384</td><td>5/1/4/0</td><td>1.52</td><td>4,200</td></tr>
+<tr><td>高标签噪声 0.20</td><td>0.5748</td><td>0.5582</td><td>+0.0166</td><td>4/2/2/<strong>1</strong></td><td>1.45</td><td>4,200</td></tr>
+<tr><td>早漂移 3/8</td><td>0.5800</td><td>0.5800</td><td><strong>0.0000</strong></td><td>6/<strong>0</strong>/6/0</td><td>1.62</td><td>4,200</td></tr>
+<tr><td>晚漂移 10/15</td><td>0.6742</td><td>0.6604</td><td>+0.0138</td><td>3/3/0/<strong>1</strong></td><td>1.26</td><td>4,200</td></tr>
+<tr><td>低特征维度 4</td><td>0.6666</td><td>0.5800</td><td><strong>+0.0866</strong></td><td>6/3/3/0</td><td>1.74</td><td>4,200</td></tr>
+<tr><td>高特征维度 16</td><td>0.6925</td><td>0.6184</td><td>+0.0741</td><td>4/2/2/<strong>1</strong></td><td>1.46</td><td>4,200</td></tr>
+<tr><td>长稳定期 24 窗</td><td>0.6618</td><td>0.6474</td><td>+0.0144</td><td>4/1/3/<strong>1</strong></td><td>1.53</td><td>5,400</td></tr>
+</tbody></table>
+<ul>
+<li>多数场景取得<strong>稳定正增益</strong>，平均 +0.041694；迭代 3–8 次全部满足 ≥3；<strong>0 失败、0 跳过</strong>。</li>
+<li>总样本 2,000 → 10,200（5.1×），墙钟 1.48 → 2.87 s（1.9×），工作集稳定 170–173 MiB，模型 0.27–1.09 MiB。</li>
+<li>大规模场景累计 10,200 标签，全部窗口完成评估；标签按 <code>count_only</code> 模式记账。</li>
+<li>候选被拒 29 次、真实触发回滚 4 次（高噪声 / 晚漂移 / 高维度 / 长稳定期），均完整留痕。</li>
+<li>稳定性边界与守护集行为：早漂移场景中候选未通过守护集校验时保持原版本；高噪声 0.20 下仍保持正增益 +0.0166。</li>
+</ul>
+
+<h3>4.3 A/B/C 公开开发包静态基线</h3>
+<p>以官方公开包 checkpoint 在公开 validation 上计算静态指标，不续训（<code>epochs=0</code>）、不加载任何外部模型服务：A Macro-F1 0.7140297220788709 / Accuracy 0.8786173633440515（1,244 样本）；B RMSE 681.1598326043113 分钟 / MAE 563.1058414514887（1,679 样本）；C RMSE 52.86857256611151 cycles / MAE 38.89982982666355（23,049 样本）。三次运行分别复现 A/B/C 三个公开包的静态基线，建立同口径参考值，并作为下节续训的起点。</p>
+<p>另附三份符合官方报告格式的 <strong>CPU 续训记录</strong>于 <code>实验记录/官方公开包CPU续训证据/</code>，分别对应 A/B/C 三个官方公开包。各包以随附 checkpoint 为起点（<code>--from-baseline</code>），沿用权重、Adam 状态与标准化参数，仅用公开训练集续训 2 个 epoch，公开验证集只用于评估。A 包（分类，Macro-F1 越高越好）<strong>0.714030 → 0.716641</strong>；B 包（回归，RMSE 越低越好，单位分钟）<strong>681.159833 → 656.351785</strong>；C 包（回归，单位 cycles）<strong>52.868573 → 52.740936</strong>。三次单线程 CPU 耗时分别为 0.043 / 0.040 / 0.242 秒。按赛题「严禁打包权重」，三份 <code>checkpoint.npz</code> 未随包分发，仅提交 <code>training.json</code> 与逐 epoch 的 <code>history.jsonl</code>，<code>parent_checkpoint_sha256</code> 与 <code>checkpoint_sha256</code> 随报告保留供核对。</p>
+
+<h3>4.4 容器与工程验证</h3>
+<p>镜像 541 MiB（上限 2 GiB），在 <code>--network none --memory 1g --cpus 1 --read-only</code> 下跑满 18 窗口、0 失败，<code>final_score</code> 与宿主机逐位一致。<code>pytest</code> 109 项通过，<code>ruff check</code> 与 <code>ruff format --check</code> 通过。这些结果说明容器入口、静态检查与当前测试集状态。</p>
+
+<h2>5. 系统运行边界与模型调用</h2>
+<p>框架的策略决策以确定性规则为核心，监测、诊断、候选评估、上线与回滚全部由本地代码完成；默认全离线运行，不依赖任何外部模型服务或网络访问。系统同时提供可选的受限策略接口：启用后，辅助模块只能从动作白名单给出建议，且须经过预算约束与冠军-挑战者评估才能生效，不直接执行代码，也不改变评估口径。</p>
+<p><code>configs/*.yaml</code> 中 <code>llm.enabled</code> 默认关闭；端点配置支持公网强制 HTTPS、密钥环境变量白名单与 <code>allowed_hosts</code> 校验，关闭时自动回退到规则策略。该分层设计使闭环在无外网、四核 8 GiB、无 GPU 的评测环境下保持可复现，同时为策略层的假设生成与参数自适应预留扩展空间。</p>
+<p>Harness 框架与底层模型属于两个层次：前者是本项目的闭环编排器，后者是可选的策略辅助能力；提交材料统一称前者为「自研 Harness」。按批次下发协议、标签释放时序与评分公式以组委会文档为准。</p>
+
+<h2>6. 实验记录与合规</h2>
+<ul>
+<li><strong>迭代证据</strong>：<code>实验记录/离线复核包/</code> 含闭环 run 的 158 条事件、<strong>6 条完整决策链</strong>（窗口 7/9/11/13/15/17，其中 2 条为被否定的假设）、逐窗口指标、版本注册表与 <code>复算.py</code> 一键复算脚本。</li>
+<li><strong>云端记录</strong>：SwanLab 项目已设为公开（<code>visibility: PUBLIC</code>），匿名请求可读取实验列表；项目链接与三条基线评估记录见《实验记录/实验记录说明.md》。评测机无外网时记录自动切换为 <code>offline</code> 落盘，本地离线复核包保证断网环境下仍可复算。</li>
+<li><strong>合规</strong>：提交目录不含模型权重（<code>weights_included=false</code>）；<code>SHA256SUMS.txt</code> 采用标准格式并实测 <code>sha256sum -c</code> 通过；附 <code>LICENSE</code>（MIT）与逐项许可证清单；运行说明给出无外网四核 8 GiB 的 <code>docker load</code> + 受限 <code>docker run</code> 契约。</li>
+</ul>
+
+<h2>7. 后续工作</h2>
+<ol>
+<li>打通标准 checkpoint 导出与按批次数据包协议，形成端到端评测链路。</li>
+<li>统一数据源适配层的清单解析格式，使不同格式的数据包走同一条编排链路。</li>
+<li>扩展策略层自适应（阈值 / 冷却）与成本-增益帕累托分析，提升决策自主性。</li>
+<li>补充总墙钟与进程 RSS 的运行时采集，并开展跨领域真实数据（气体 / 轴承 / 发动机）的闭环对照。</li>
+<li>按组委会发布的接口与评分文档校准监测阈值和主指标。</li>
+</ol>
+
+<h2>结论</h2>
+<p>本项目已形成可运行的自进化闭环、6 条完整决策链留痕、10 场景 × 2 组扩展性验证、官方公开包静态基线复现与 A/B/C 三包官方格式 CPU 续训报告，以及一套可离线复算、无权重、可校验的提交材料。全部结论均可在提交目录内按数据来源与评估口径逐项复核；后续工作集中在标准 checkpoint 导出、按批次协议对接与策略层自适应三个方向。</p>
+
+<div class="foot">工业模型自进化框架 · 提交版 · 2026-11-14　|　证据文件见《00-提交材料索引.md》，实验结论均标注评估口径。</div>
+
+</body>
+</html>

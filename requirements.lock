@@ -1,0 +1,19 @@
+# Generated from the verified Python 3.13 development environment.
+# Update this file only after running the complete test suite.
+annotated-types==0.8.0
+joblib==1.6.0
+numpy==2.5.4
+pandas==3.1.0
+pydantic==2.14.1
+pydantic-core==2.50.1
+python-dateutil==3.0.0
+PyYAML==6.0.3
+scikit-learn==1.9.1
+scipy==1.18.1
+setuptools==80.9.0
+six==1.17.0
+threadpoolctl==3.7.0
+typing-extensions==4.16.0
+typing-inspection==0.4.4
+tzdata==2026.5
+wheel==0.45.1

@@ -1,0 +1,103 @@
+# 官方数据包运行配置（起点，不是终稿）。
+#
+# 用法：
+#   python -m industrial_evolution.cli run-official --pack <数据包目录> --config configs/official.yaml
+#   python -m industrial_evolution.cli run-official --pack <数据包目录> --print-spec   # 先看解析结果
+#
+# 数据发布后必须按官方指标、标签延迟与成本公式重新校准：monitoring 阈值、budget 上限、
+# validation 的 min_improvement（官方主指标不同，0.008 这个数需要重标）。
+#
+# 【2026-11-12 补充】本配置按官方 A 包（气体分类、Macro-F1）对齐主指标与静态基线。
+# B/C 是回归任务：需把 task_type 改为 regression、score_metric 改为 negative_rmse，
+# 并把官方 RMSE 取负填入 official_baseline_score（B: -681.1598326043113，
+# C: -52.86857256611151），official_metric_name 填 negative_rmse 才视为同口径。
+# 静态基线数值来自各包 training.json 的 validation_after，标记为开发参考、
+# official_scoring_ready=false，不是正式评分基线。
+#
+# 本配置默认关闭可选策略模型通道，全部决策由规则门控完成。
+# run-official 目前按 CSV 清单假设解析；JSONL 格式数据包的接入按正式接口规范另行适配。
+seed: 42
+task_type: classification
+
+# 官方数据包不读这一段，参数由 --pack 的清单提供；这里的值只在打包器缺字段时兜底。
+stream:
+  initial_samples: 600
+  window_size: 200
+  n_windows: 18
+  n_features: 8
+  gradual_drift_start: 6
+  abrupt_drift_start: 12
+  label_noise: 0.08
+
+monitoring:
+  psi_threshold: 0.18
+  ks_threshold: 0.18
+  performance_drop_threshold: 0.06
+  label_shift_threshold: 0.12
+  consecutive_windows: 1
+  reference_update_rate: 0.15
+
+policy:
+  cooldown_windows: 1
+  rollback_patience: 2
+  rollback_drop: 0.12
+
+training:
+  replay_capacity: 4000
+  recent_fraction: 0.65
+  max_replay_samples: 1500
+  holdout_fraction: 0.30
+
+validation:
+  min_improvement: 0.008
+  max_historical_drop: 0.10
+  guard_samples: 800
+  # 对齐官方 A 包主指标；auto 会退回 balanced_accuracy，与官方口径不可比。
+  score_metric: macro_f1
+  official_baseline_score: 0.7140297220788709
+  official_metric_name: macro_f1
+
+budget:
+  max_updates: 8
+  max_training_seconds: 240.0
+  max_labels: 20000
+  max_tokens: 8000
+  # 按批次提供标签的运行模式下，配额记账与窗口推进解耦。
+  label_budget_mode: count_only
+  min_updates: 3
+
+tracking:
+  run_root: "runs"
+  # 设成 true 前先确认 SWANLAB_API_KEY 已注入，否则启动时会记一条 swanlab_disabled 事件后降级。
+  enable_swanlab: false
+  swanlab_project: "industrial_evolution"
+  # 上传形态：online（云端看板）/ local（本机看板）/ offline（落盘待 swanlab sync）/ disabled。
+  # 评测机无外网时必须选 offline 或 local，否则初始化失败会降级成纯本地记录。
+  swanlab_mode: "online"
+  swanlab_tags: ["industrial-evolution"]
+  # 结束后把 summary.json / metrics.csv / events.jsonl / 模型注册表 作为 run 文件上传，
+  # 别人拿到一次 run 就能复算，不用找你本地目录。
+  swanlab_upload_artifacts: true
+  swanlab_artifact_max_mb: 64
+  # 逐批次上线/不上线判断除落盘 decisions.jsonl 外，同步打印一行 JSON 到 stdout，
+  # 供后续在线批次握手协议对接。不需要时改为 false。
+  emit_batch_decisions: true
+
+# 可选策略模型通道默认关闭；如启用，须指向本机或内网的 OpenAI 兼容端点。
+# model ID 与端点地址按实际服务配置填写，密钥仅通过环境变量注入。
+llm:
+  enabled: false
+  provider: openai_compatible
+  model: "LOCAL_MODEL_ID"
+  base_url: "http://127.0.0.1:8000/v1"
+  api_key_env: "LOCAL_LLM_API_KEY"
+  api_key_required: false
+  json_mode: true
+  temperature: 0.0
+  timeout_seconds: 20.0
+  max_retries: 1
+  max_output_tokens: 160
+  max_tokens_per_call: 800
+  max_calls: 8
+  min_confidence: 0.65
+  call_cooldown_windows: 2
