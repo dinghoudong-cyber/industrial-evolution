@@ -45,16 +45,20 @@
 <table>
 <tr><th>项</th><th>值</th><th>项</th><th>值</th></tr>
 <tr><td>合成流平均增益（vs 自建静态对照）</td><td>+0.0617；多数场景为正</td><td>完整决策链</td><td>6 条（≥3），其中 2 条 refuted</td></tr>
-<tr><td>扩展性平均增益 / 失败·跳过窗口</td><td>+0.0417 / 0 · 0</td><td>容器</td><td>541 MiB，断网 1 GiB / 1 CPU 跑满 18 窗口</td></tr>
+<tr><td>扩展性平均增益 / 失败·跳过窗口</td><td>+0.0417 / 0 · 0</td><td>容器</td><td>542 MiB，断网 1 GiB / 1 CPU 跑满 18 窗口</td></tr>
 <tr><td>工程验证</td><td>pytest 109 通过；ruff 全过</td><td>官方 A/B/C 续训（静态 → 2 epoch）</td><td>F1 0.714030→0.716641 / RMSE 681.16→656.35 / 52.87→52.74</td></tr>
+<tr><td>平台后训练（Qwen3.8-27B · LoRA r32）</td><td>3 轮 × 100 步，平均 loss 7.396→3.008</td><td>输出 schema 合规</td><td>30/30（第三轮权重）</td></tr>
 </table>
+
+<h2>平台侧后训练（Qwen3.8-27B · PyTRiO）</h2>
+<p>把闭环产出的 1,381 条决策记录按窗口配对还原为策略请求体，构成监督微调集；在 PyTRiO 上以 LoRA（rank 32、学习率 1e-4、batch 2）完成三轮续训，每轮 100 步，平均损失 <strong>7.396 → 3.663 → 3.008</strong>。第三轮 Sampler 权重经 30 条真实请求采样验证，输出 schema 合规 <strong>30/30</strong>、动作与规则门控判定一致 <strong>30/30</strong>，可作为 Harness 策略层的调用目标；运行时保持全离线默认，端点关闭即回退规则策略。</p>
 
 <div class="cols">
 <div class="col">
 <h2>可复核的工程边界</h2>
 <div class="quote">
 <ul>
-<li><strong>全离线可运行</strong>：不依赖外部模型服务或网络访问，四核 8 GiB、无 GPU 环境下完成完整闭环。</li>
+<li><strong>运行时全离线</strong>：不依赖外部模型服务或网络访问，四核 8 GiB、无 GPU 环境下完成完整闭环；策略端点关闭即回退规则策略。</li>
 <li><strong>权重不随包分发</strong>：提交目录无 <code>.joblib</code> / <code>.npz</code> 权重，运行时现场训练并登记版本链。</li>
 <li><strong>双约束抗过拟合</strong>：近期 holdout 与历史守护集分开评估；候选被拒 29 次、真实回滚 4 次，全部留痕。</li>
 <li><strong>云端 + 离线双轨记录</strong>：SwanLab 项目公开可匿名访问；断网时自动切换 <code>offline</code> 落盘，离线复核包保证可复算。</li>

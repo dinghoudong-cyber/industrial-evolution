@@ -110,12 +110,16 @@
 <p>另附三份符合官方报告格式的 <strong>CPU 续训记录</strong>于 <code>实验记录/官方公开包CPU续训证据/</code>，分别对应 A/B/C 三个官方公开包。各包以随附 checkpoint 为起点（<code>--from-baseline</code>），沿用权重、Adam 状态与标准化参数，仅用公开训练集续训 2 个 epoch，公开验证集只用于评估。A 包（分类，Macro-F1 越高越好）<strong>0.714030 → 0.716641</strong>；B 包（回归，RMSE 越低越好，单位分钟）<strong>681.159833 → 656.351785</strong>；C 包（回归，单位 cycles）<strong>52.868573 → 52.740936</strong>。三次单线程 CPU 耗时分别为 0.043 / 0.040 / 0.242 秒。按赛题「严禁打包权重」，三份 <code>checkpoint.npz</code> 未随包分发，仅提交 <code>training.json</code> 与逐 epoch 的 <code>history.jsonl</code>，<code>parent_checkpoint_sha256</code> 与 <code>checkpoint_sha256</code> 随报告保留供核对。</p>
 
 <h3>4.4 容器与工程验证</h3>
-<p>镜像 541 MiB（上限 2 GiB），在 <code>--network none --memory 1g --cpus 1 --read-only</code> 下跑满 18 窗口、0 失败，<code>final_score</code> 与宿主机逐位一致。<code>pytest</code> 109 项通过，<code>ruff check</code> 与 <code>ruff format --check</code> 通过。这些结果说明容器入口、静态检查与当前测试集状态。</p>
+<p>镜像 542 MiB（上限 2 GiB），在 <code>--network none --memory 1g --cpus 1 --read-only</code> 下跑满 18 窗口、0 失败，<code>final_score</code> 与宿主机逐位一致。<code>pytest</code> 109 项通过，<code>ruff check</code> 与 <code>ruff format --check</code> 通过。这些结果说明容器入口、静态检查与当前测试集状态。</p>
 
 <h2>5. 系统运行边界与模型调用</h2>
 <p>框架的策略决策以确定性规则为核心，监测、诊断、候选评估、上线与回滚全部由本地代码完成；默认全离线运行，不依赖任何外部模型服务或网络访问。系统同时提供可选的受限策略接口：启用后，辅助模块只能从动作白名单给出建议，且须经过预算约束与冠军-挑战者评估才能生效，不直接执行代码，也不改变评估口径。</p>
 <p><code>configs/*.yaml</code> 中 <code>llm.enabled</code> 默认关闭；端点配置支持公网强制 HTTPS、密钥环境变量白名单与 <code>allowed_hosts</code> 校验，关闭时自动回退到规则策略。该分层设计使闭环在无外网、四核 8 GiB、无 GPU 的评测环境下保持可复现，同时为策略层的假设生成与参数自适应预留扩展空间。</p>
 <p>Harness 框架与底层模型属于两个层次：前者是本项目的闭环编排器，后者是可选的策略辅助能力；提交材料统一称前者为「自研 Harness」。按批次下发协议、标签释放时序与评分公式以组委会文档为准。</p>
+
+<h3>5.1 平台侧后训练记录</h3>
+<p>闭环产出的 1,381 条决策记录中，<code>drift_diagnosis</code> 与 <code>update_decision</code> 按窗口配对可还原为完整的策略请求体，据此构建监督微调集（<code>no_update</code> 1,118 条 / <code>retrain_with_replay</code> 263 条），目标输出为 <code>{action, confidence, reason}</code> 三项。监督信号来自闭环自身的规则门控判定，置信度按监测信号强度单调映射——因此该数据集是策略行为的蒸馏，不含外部标注。</p>
+<p>在 PyTRiO 平台上以 <code>Qwen/Qwen3.8-27B</code> 为基座、LoRA rank 32、学习率 1e-4、batch 2 完成三轮续训，每轮 100 步，平均损失 <strong>7.396 → 3.663 → 3.008</strong>；三轮的损失曲线、超参与数据切片由 SwanLab 项目 <code>industrial_evolution</code> 全程记录。第三轮 Sampler 权重（约 1.08 GiB）经 30 条真实请求采样验证：输出 schema 合规 <strong>30/30</strong>，动作与规则门控判定一致 <strong>30/30</strong>。该权重作为策略层的可选调用目标接入，与前述「运行时默认全离线、端点关闭即回退规则策略」的分层设计一致，不改变闭环评估口径。</p>
 
 <h2>6. 实验记录与合规</h2>
 <ul>

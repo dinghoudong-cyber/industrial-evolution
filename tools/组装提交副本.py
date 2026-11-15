@@ -19,7 +19,7 @@ NEW_IMAGE = ROOT / "dist/industrial-evolution-school-2026-11-15.tar"
 
 # 源码归档：只允许这些 docs 进入（其余为内部自评/整改/企业赛规划/开发笔记）
 DOCS_ALLOW = {"扩展性验证报告.md", "官方CPU包本地验证.md"}
-TOOLS_BLOCK = {"离线更新镜像.py", "生成提交版Word.py", "组装提交副本.py", "统一提交口径.py", "mock_llm_server.py"}
+TOOLS_BLOCK = {"离线更新镜像.py", "生成提交版Word.py", "组装提交副本.py", "统一提交口径.py", "mock_llm_server.py", "生成参赛方案.py"}
 
 SOURCE_COMMENT_RULES: dict[str, list[tuple[str, str]]] = {
     "LICENSE": [
