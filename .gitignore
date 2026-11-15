@@ -52,4 +52,4 @@ swanlog/
 pytrio-train/.venv/
 pytrio-train/_pkgs/
 pytrio-train/权重/
-pytrio-train/outputs/
+# outputs/ 保留：每轮的 sampler 路径与验证明细是训练证据（约 70KB），随仓库提交
