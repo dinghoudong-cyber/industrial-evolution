@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import random
 import sys
 import time
 from datetime import datetime, timezone
@@ -181,8 +182,12 @@ def _load_samples(path: Path | None) -> list[dict[str, Any]]:
     return samples
 
 
-def _maybe_swanlab(enabled: bool, config: dict[str, Any]):
-    """SwanLab 不在 PyTRiO SDK 内，由脚本自行上报，用于回填「训练记录链接」。"""
+def _maybe_swanlab(enabled: bool, config: dict[str, Any], run_tag: str = ""):
+    """SwanLab 不在 PyTRiO SDK 内，由脚本自行上报，用于回填「训练记录链接」。
+
+    默认写进已经设为公开的项目 ``industrial_evolution``，保证评审能直接打开。
+    若新建项目，务必先在云端把项目改为公开，否则链接对外不可见。
+    """
     if not enabled:
         return None
     try:
@@ -190,11 +195,21 @@ def _maybe_swanlab(enabled: bool, config: dict[str, Any]):
     except ImportError:
         print("[SwanLab] 未安装 swanlab，跳过上报（pip install swanlab）")
         return None
-    run = swanlab.init(
-        project="industrial-evolution-sampler",
-        experiment_name=f"pytrio-{config['base_model'].split('/')[-1]}-{config['steps']}step",
-        config=config,
-    )
+
+    project = os.environ.get("SWANLAB_PROJECT", "industrial_evolution")
+    alias = config.get("base_model", "model").split("/")[-1]
+    name = os.environ.get("SWANLAB_RUN_NAME") or f"pytrio-{alias}-{run_tag or 'run'}"
+    mode = os.environ.get("SWANLAB_MODE", "online")
+    try:
+        run = swanlab.init(
+            project=project,
+            experiment_name=name,
+            config=config,
+            mode=mode,
+        )
+    except BaseException as exc:  # noqa: BLE001 - 上报失败绝不影响训练主流程
+        print(f"[SwanLab] 初始化失败，跳过上报：{type(exc).__name__}: {exc}")
+        return None
     print(f"[SwanLab] run 已创建: {getattr(run, 'url', '（见控制台）')}")
     return run
 
@@ -209,8 +224,31 @@ def main() -> int:
     parser.add_argument("--batch-size", type=int, default=1, help="每步样本数")
     parser.add_argument("--data", type=Path, default=None, help="sft_data.jsonl 路径")
     parser.add_argument("--weight-name", default="sampler", help="保存的权重名")
+    parser.add_argument(
+        "--save-state",
+        default=None,
+        help="额外保存 Train 类型断点名（供下一轮 --resume 续训，不能填进提交表单）",
+    )
+    parser.add_argument(
+        "--resume",
+        default=None,
+        help="从 save_state 产出的 trio:// 断点续训（此时 --base-model 与 --rank 由断点决定）",
+    )
+    parser.add_argument("--seed", type=int, default=20261115, help="样本打乱种子，保证可复现")
+    parser.add_argument(
+        "--offset",
+        type=int,
+        default=0,
+        help="样本起始偏移，配合 seed 让每轮使用不同片段，避免重复同一批数据",
+    )
+    parser.add_argument("--epochs", type=float, default=1.0, help="按样本量换算步数时的轮数")
     parser.add_argument("--swanlab", action="store_true", help="上报 SwanLab 并打印 run 链接")
     parser.add_argument("--dry-run", action="store_true", help="只做编码校验，不调用训练接口")
+    parser.add_argument(
+        "--no-save",
+        action="store_true",
+        help="只训练不保存 Sampler 权重（测速/探测用，避免生成大权重占用额度）",
+    )
     args = parser.parse_args()
 
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -238,21 +276,37 @@ def main() -> int:
 
     if args.list_models:
         return 0
-    if not args.base_model:
-        _die("请用 --base-model 指定基座模型（可先 --list-models 查看）")
-    if models and args.base_model not in models:
-        print(f"[警告] {args.base_model} 不在返回的模型目录中，仍尝试创建训练客户端")
 
-    print(f"[训练] 创建 LoRA 训练客户端 base_model={args.base_model} rank={args.rank}")
-    try:
-        training = client.create_lora_training_client(base_model=args.base_model, rank=args.rank)
-    except Exception as exc:  # noqa: BLE001
-        _die(f"创建训练客户端失败（常见原因：额度不足或模型无权限）: {exc}")
+    if args.resume:
+        if not args.resume.startswith("trio://"):
+            _die(f"--resume 需要 save_state 返回的 trio:// 路径，实际收到: {args.resume}")
+        print(f"[训练] 从断点续训: {args.resume}")
+        try:
+            training = client.create_training_client_from_state(args.resume)
+        except Exception as exc:  # noqa: BLE001
+            _die(f"从断点恢复训练客户端失败（断点是否过期？）: {exc}")
+        base_model = getattr(training, "model_id", None) or args.base_model
+        if not base_model:
+            _die("断点未返回 model_id，请额外用 --base-model 指定基座模型")
+        print(f"[训练] 续训客户端就绪，基座={base_model}（rank 由断点决定）")
+    else:
+        if not args.base_model:
+            _die("请用 --base-model 指定基座模型（可先 --list-models 查看）")
+        if models and args.base_model not in models:
+            print(f"[警告] {args.base_model} 不在返回的模型目录中，仍尝试创建训练客户端")
+        print(f"[训练] 创建 LoRA 训练客户端 base_model={args.base_model} rank={args.rank}")
+        try:
+            training = client.create_lora_training_client(
+                base_model=args.base_model, rank=args.rank
+            )
+        except Exception as exc:  # noqa: BLE001
+            _die(f"创建训练客户端失败（常见原因：额度不足或模型无权限）: {exc}")
+        base_model = args.base_model
 
     try:
         from pytrio.model.tokenizer import get_tokenizer  # noqa: PLC0415
 
-        tokenizer = get_tokenizer(args.base_model)
+        tokenizer = get_tokenizer(base_model)
         print("[Tokenizer] 已加载")
     except Exception as exc:  # noqa: BLE001
         _die(f"加载 tokenizer 失败（检查 modelscope/transformers 是否安装、能否联网）: {exc}")
@@ -267,30 +321,86 @@ def main() -> int:
         return 0
 
     config = {
-        "base_model": args.base_model,
+        "base_model": base_model,
         "rank": args.rank,
         "learning_rate": args.lr,
         "steps": args.steps,
         "batch_size": args.batch_size,
         "samples": len(samples),
+        "seed": args.seed,
+        "offset": args.offset,
+        "resume_from": args.resume,
     }
-    swan_run = _maybe_swanlab(args.swanlab, config)
+    swan_run = _maybe_swanlab(args.swanlab, config, run_tag=args.weight_name)
     adam = pytrio.AdamParams(learning_rate=args.lr)
+
+    # 固定种子打乱，再按 offset 轮转起点：每轮喂不同片段，同时保证可复现
+    order = list(range(len(datums)))
+    random.Random(args.seed).shuffle(order)
+    if args.offset:
+        k = args.offset % len(order)
+        order = order[k:] + order[:k]
+    datums = [datums[i] for i in order]
 
     batch = max(1, args.batch_size)
     started = time.time()
+    losses: list[float] = []
     for step in range(args.steps):
         window = [datums[(step * batch + i) % len(datums)] for i in range(batch)]
         fwd = training.forward_backward(window, loss_fn="cross_entropy", auto_shift=True).result()
-        opt = training.optim_step(adam).result()
-        loss = getattr(fwd, "loss", None)
-        loss_text = f"{float(loss):.4f}" if isinstance(loss, (int, float)) else "n/a"
-        print(f"[step {step + 1}/{args.steps}] loss={loss_text}  optimizer={type(opt).__name__}")
+        training.optim_step(adam).result()
+        # cross_entropy 的标量损失在 metrics 里，逐样本值在 loss_fn_outputs
+        metrics = getattr(fwd, "metrics", None) or {}
+        loss = metrics.get("loss") if isinstance(metrics, dict) else None
+        if loss is None:
+            for key, value in (metrics.items() if isinstance(metrics, dict) else ()):
+                if "loss" in str(key).lower() and isinstance(value, (int, float)):
+                    loss = value
+                    break
+        if isinstance(loss, (int, float)):
+            losses.append(float(loss))
+            loss_text = f"{float(loss):.4f}"
+        else:
+            loss_text = f"n/a {list(metrics)[:3]}"
+        if step == 0 or (step + 1) % 10 == 0 or step + 1 == args.steps:
+            print(f"[step {step + 1}/{args.steps}] loss={loss_text}")
         if swan_run is not None and isinstance(loss, (int, float)):
             swan_run.log({"train/loss": float(loss), "step": step + 1})
 
     elapsed = time.time() - started
-    print(f"[训练] 完成 {args.steps} 步，用时 {elapsed:.1f}s")
+    per_step = elapsed / max(1, args.steps)
+    if losses:
+        summary = (
+            f"平均 loss={sum(losses) / len(losses):.4f}"
+            f"（首 {losses[0]:.4f} → 末 {losses[-1]:.4f}）"
+        )
+    else:
+        summary = "loss 未返回"
+    print(
+        f"[训练] 完成 {args.steps} 步，用时 {elapsed:.1f}s"
+        f"（{per_step:.1f}s/步），{summary}"
+    )
+
+    state_path = None
+    if args.save_state:
+        print(f"[断点] save_state(name={args.save_state})（Train 类型，仅供续训）…")
+        try:
+            state = training.save_state(args.save_state).result()
+        except Exception as exc:  # noqa: BLE001
+            _die(f"保存训练断点失败: {exc}")
+        state_path = getattr(state, "path", None)
+        if not state_path:
+            _die(f"断点返回结构中没有 path 字段，实际为: {state!r}")
+        print(f"[断点] 已保存: {state_path}")
+
+    if args.no_save:
+        print("[保存] 已指定 --no-save，跳过 Sampler 权重保存。")
+        if swan_run is not None:
+            try:
+                swan_run.finish()
+            except Exception:  # noqa: BLE001
+                pass
+        return 0
 
     print("[保存] 调用 save_weights_for_sampler（Sampler 类型，可推理、可提交）…")
     try:
@@ -316,12 +426,19 @@ def main() -> int:
     stamp = datetime.now(timezone.utc).astimezone().strftime("%Y%m%d-%H%M%S")
     record = {
         "sampler_path": weight_path,
-        "base_model": getattr(saved, "model", args.base_model),
+        "train_state_path": state_path,
+        "resume_from": args.resume,
+        "base_model": getattr(saved, "model", None) or base_model,
         "size": size,
         "steps": args.steps,
         "rank": args.rank,
         "learning_rate": args.lr,
         "samples": len(samples),
+        "seed": args.seed,
+        "offset": args.offset,
+        "loss_first": round(losses[0], 6) if losses else None,
+        "loss_last": round(losses[-1], 6) if losses else None,
+        "loss_mean": round(sum(losses) / len(losses), 6) if losses else None,
         "data": str(args.data) if args.data else "builtin",
         "swanlab_url": getattr(swan_run, "url", None) if swan_run else None,
         "elapsed_seconds": round(elapsed, 2),

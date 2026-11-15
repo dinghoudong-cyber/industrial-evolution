@@ -47,6 +47,8 @@ Thumbs.db
 .workbuddy/
 
 # ---------------- PyTRiO 训练工作区 ----------------
+.venv-pytrio/
+swanlog/
 pytrio-train/.venv/
 pytrio-train/_pkgs/
 pytrio-train/权重/
